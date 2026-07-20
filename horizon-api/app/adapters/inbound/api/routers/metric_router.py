@@ -9,30 +9,30 @@ from app.adapters.inbound.api.schemas.host_metric import (
 )
 from app.application.ports.usecase.host_metric_use_case import HostMetricUseCase
 
-router = APIRouter(prefix="/hosts", tags=["host-metric"])
-
-
-@router.post(
-    "/metrics",
-    response_model=HostMetricCollectResponse,
-    status_code=status.HTTP_201_CREATED,
-)
-async def collect_metrics(
-    body: HostMetricBatchRequest,
-    service: HostMetricUseCase = Depends(get_host_metric_service),
-):
-    result = await service.collect(body.to_command())
-    return HostMetricCollectResponse.from_result(result)
+router = APIRouter(prefix="/metrics", tags=["metric"])
 
 
 @router.get(
-    "/metrics",
+    "/hosts",
     response_model=list[HostMetricSeriesResponse],
     response_model_exclude_none=True,
 )
-async def query_metrics(
+async def query_host_metrics(
     query: HostMetricQueryParam = Query(),
     service: HostMetricUseCase = Depends(get_host_metric_service),
 ):
     series = await service.query(query.to_query())
     return [HostMetricSeriesResponse.from_domain(s) for s in series]
+
+
+@router.post(
+    "/hosts",
+    response_model=HostMetricCollectResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def collect_host_metrics(
+    body: HostMetricBatchRequest,
+    service: HostMetricUseCase = Depends(get_host_metric_service),
+):
+    result = await service.collect(body.to_command())
+    return HostMetricCollectResponse.from_result(result)
