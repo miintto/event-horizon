@@ -1,0 +1,102 @@
+from datetime import datetime
+from uuid import UUID
+
+from pydantic import BaseModel, Field
+
+from app.application.ports.usecase.host_metric_use_case import (
+    HostMetricCollectCommand,
+    HostMetricCollectResult,
+    HostMetricDatapoint,
+    HostMetricQuery,
+)
+from app.domain.enums import AggregateInterval, MetricKind
+from app.domain.models.host_metric import HostMetricSeries
+
+
+class HostMetricDatapointRequest(BaseModel):
+    collected_at: datetime
+    cpu_usage: float
+    memory_used: int
+    memory_total: int
+    disk_used: int
+    disk_total: int
+    net_rx: int
+    net_tx: int
+    load_avg_1: float | None = None
+    load_avg_5: float | None = None
+    load_avg_15: float | None = None
+    extra: dict | None = None
+
+    def to_datapoint(self) -> HostMetricDatapoint:
+        return HostMetricDatapoint(
+            collected_at=self.collected_at,
+            cpu_usage=self.cpu_usage,
+            memory_used=self.memory_used,
+            memory_total=self.memory_total,
+            disk_used=self.disk_used,
+            disk_total=self.disk_total,
+            net_rx=self.net_rx,
+            net_tx=self.net_tx,
+            load_avg_1=self.load_avg_1,
+            load_avg_5=self.load_avg_5,
+            load_avg_15=self.load_avg_15,
+            extra=self.extra,
+        )
+
+
+class HostMetricBatchRequest(BaseModel):
+    agent_uuid: UUID
+    hostname: str = Field(max_length=255)
+    datapoints: list[HostMetricDatapointRequest]
+
+    def to_command(self) -> HostMetricCollectCommand:
+        return HostMetricCollectCommand(
+            agent_uuid=self.agent_uuid,
+            hostname=self.hostname,
+            datapoints=[dp.to_datapoint() for dp in self.datapoints],
+        )
+
+
+class HostMetricCollectResponse(BaseModel):
+    ingested: int
+
+    @classmethod
+    def from_result(cls, result: HostMetricCollectResult) -> HostMetricCollectResponse:
+        return cls(ingested=result.ingested)
+
+
+class HostMetricQueryParam(BaseModel):
+    metric: MetricKind
+    interval: AggregateInterval
+    start_at: datetime
+    end_at: datetime
+    host_ids: list[int] | None = None
+
+    def to_query(self) -> HostMetricQuery:
+        return HostMetricQuery(
+            metric=self.metric,
+            host_ids=self.host_ids,
+            interval=self.interval,
+            start_at=self.start_at,
+            end_at=self.end_at,
+        )
+
+
+class HostMetricPointResponse(BaseModel):
+    bucket: datetime
+    value: float | None
+
+
+class HostMetricSeriesResponse(BaseModel):
+    host_id: int
+    points: list[HostMetricPointResponse]
+
+    @classmethod
+    def from_domain(cls, series: HostMetricSeries) -> HostMetricSeriesResponse:
+        return cls(
+            host_id=series.host_id,
+            points=[
+                HostMetricPointResponse(bucket=point.bucket, value=point.value)
+                for point in series.points
+            ],
+        )
