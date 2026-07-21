@@ -33,3 +33,17 @@ class AggregateInterval(StrEnum):
                 return 3600
             case _:
                 raise ValueError("Invalid Interval")
+
+    @property
+    def max_range(self) -> int:
+        match self:
+            case AggregateInterval.ONE_MINUTE:
+                return 3 * 3600  # 3 hours
+            case AggregateInterval.FIVE_MINUTES:
+                return 16 * 3600  # 16 hours
+            case AggregateInterval.TEN_MINUTES:
+                return 36 * 3600  # 36 hours
+            case AggregateInterval.ONE_HOUR:
+                return 8 * 24 * 3600  # 8 days
+            case _:
+                raise ValueError("Invalid Interval")

@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from app.application.ports.usecase.host_metric_use_case import (
     HostMetricCollectCommand,
@@ -71,6 +71,16 @@ class HostMetricQueryParam(BaseModel):
     start_at: datetime
     end_at: datetime
     host_ids: list[int] | None = None
+
+    @model_validator(mode="after")
+    def _check_range(self) -> HostMetricQueryParam:
+        if self.start_at >= self.end_at:
+            raise ValueError("start_at must be earlier than end_at")
+        if self.interval.max_range < (self.end_at - self.start_at).total_seconds():
+            raise ValueError(
+                "Requested time range is too wide for the selected interval"
+            )
+        return self
 
     def to_query(self) -> HostMetricQuery:
         return HostMetricQuery(
