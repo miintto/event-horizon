@@ -3,9 +3,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.adapters.inbound.api.exception_handlers import api_exception_handler
+from app.adapters.inbound.api.middlewares.logging_middleware import LoggingMiddleware
 from app.adapters.inbound.api.routers import api_router
 from app.domain.exceptions import APIException
 from app.infrastructure.database import engine
+from app.infrastructure.logging import setup_logging
+
+setup_logging()
 
 
 @asynccontextmanager
@@ -15,6 +19,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Horizon API", lifespan=lifespan)
+
+# Middlewares
+app.add_middleware(LoggingMiddleware)
 
 # Exception Handlers
 app.add_exception_handler(APIException, api_exception_handler)
