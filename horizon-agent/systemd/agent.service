@@ -5,8 +5,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-EnvironmentFile=/etc/horizon-agent/env
-ExecStart=/opt/horizon-agent/.venv/bin/python -m agent
+ExecStart=/opt/horizon-agent/horizon-agent /etc/horizon-agent/config.toml
 Restart=always
 RestartSec=5
 

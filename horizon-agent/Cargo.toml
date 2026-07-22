@@ -1,0 +1,22 @@
+[package]
+name = "horizon-agent"
+version = "0.1.0"
+edition = "2024"
+description = "Event Horizon - 인스턴스 지표 수집 에이전트 (Rust)"
+
+[dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "time"] }
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"] }
+serde = { version = "1", features = ["derive"] }
+toml = "1"
+sysinfo = "0.39"
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+anyhow = "1"
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
