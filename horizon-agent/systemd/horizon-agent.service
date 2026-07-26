@@ -2,12 +2,20 @@
 Description=Event Horizon metric agent
 After=network-online.target
 Wants=network-online.target
+ConditionPathExists=/etc/horizon-agent/config.toml
 
 [Service]
 Type=simple
 ExecStart=/opt/horizon-agent/horizon-agent /etc/horizon-agent/config.toml
 Restart=always
 RestartSec=5
+StateDirectory=horizon-agent
+
+NoNewPrivileges=true
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
 
 [Install]
 WantedBy=multi-user.target
