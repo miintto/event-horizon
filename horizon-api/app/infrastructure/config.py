@@ -4,6 +4,8 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     app_env: str = "local"
 
+    cors_origins: list[str] = ["*"]
+
     db_host: str
     db_port: int = 5432
     db_name: str
