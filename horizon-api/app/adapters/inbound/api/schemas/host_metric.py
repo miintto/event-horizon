@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field, model_validator
 from app.adapters.inbound.api.schemas.container_metric import (
     ContainerCollectItemRequest,
 )
-from app.application.ports.usecase.host_metric_use_case import (
+from app.application.ports.usecase.metric_use_case import (
     HostMetricCollectCommand,
     HostMetricCollectResult,
     HostMetricDatapoint,

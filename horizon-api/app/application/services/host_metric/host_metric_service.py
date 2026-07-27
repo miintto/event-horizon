@@ -2,22 +2,20 @@ from app.application.ports.repository.container_metric_repository import (
     ContainerMetricRepository,
 )
 from app.application.ports.repository.container_repository import ContainerRepository
-from app.application.ports.repository.host_metric_repository import (
-    HostMetricRepository,
-)
+from app.application.ports.repository.host_metric_repository import HostMetricRepository
 from app.application.ports.repository.host_repository import HostRepository
-from app.application.ports.usecase.host_metric_use_case import (
+from app.application.ports.usecase.metric_use_case import (
     ContainerCollectItem,
     HostMetricCollectCommand,
     HostMetricCollectResult,
     HostMetricQuery,
-    HostMetricUseCase,
+    MetricUseCase,
 )
 from app.domain.models.host_metric import HostMetricSeries
 from app.infrastructure.transaction import transactional
 
 
-class HostMetricService(HostMetricUseCase):
+class MetricService(MetricUseCase):
     def __init__(
         self,
         host_metric_repository: HostMetricRepository,

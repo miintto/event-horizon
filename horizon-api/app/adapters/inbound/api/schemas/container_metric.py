@@ -1,12 +1,17 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
-from app.application.ports.usecase.host_metric_use_case import (
+from app.application.ports.usecase.container_metric_use_case import (
+    ContainerMetricQuery,
+)
+from app.application.ports.usecase.metric_use_case import (
     ContainerCollectItem,
     ContainerMetricDatapoint,
 )
+from app.domain.enums import AggregateInterval, ContainerMetricKind
 from app.domain.models.container import ContainerState
+from app.domain.models.container_metric import ContainerMetricSeries
 
 
 class ContainerMetricDatapointRequest(BaseModel):
@@ -60,4 +65,53 @@ class ContainerCollectItemRequest(BaseModel):
             exit_code=self.exit_code,
             started_at=self.started_at,
             datapoints=[dp.to_datapoint() for dp in self.datapoints],
+        )
+
+
+class ContainerMetricQueryParam(BaseModel):
+    metric: ContainerMetricKind
+    interval: AggregateInterval
+    start_at: datetime
+    end_at: datetime
+    container_ids: list[int] | None = None
+
+    @model_validator(mode="after")
+    def _check_range(self) -> ContainerMetricQueryParam:
+        if self.start_at >= self.end_at:
+            raise ValueError("start_at must be earlier than end_at")
+        if self.interval.max_range < (self.end_at - self.start_at).total_seconds():
+            raise ValueError(
+                "Requested time range is too wide for the selected interval"
+            )
+        return self
+
+    def to_query(self) -> ContainerMetricQuery:
+        return ContainerMetricQuery(
+            metric=self.metric,
+            container_ids=self.container_ids,
+            interval=self.interval,
+            start_at=self.start_at,
+            end_at=self.end_at,
+        )
+
+
+class ContainerMetricPointResponse(BaseModel):
+    bucket: datetime
+    value: float | None
+
+
+class ContainerMetricSeriesResponse(BaseModel):
+    container_id: int
+    points: list[ContainerMetricPointResponse]
+
+    @classmethod
+    def from_domain(
+        cls, series: ContainerMetricSeries
+    ) -> ContainerMetricSeriesResponse:
+        return cls(
+            container_id=series.container_id,
+            points=[
+                ContainerMetricPointResponse(bucket=point.bucket, value=point.value)
+                for point in series.points
+            ],
         )

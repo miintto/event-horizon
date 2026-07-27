@@ -122,7 +122,7 @@ class HostMetricQuery:
     end_at: datetime
 
 
-class HostMetricUseCase(ABC):
+class MetricUseCase(ABC):
     @abstractmethod
     async def collect(
         self, command: HostMetricCollectCommand
