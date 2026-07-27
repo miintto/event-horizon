@@ -6,3 +6,8 @@ class APIException(Exception):
 class HostNotFoundException(APIException):
     status_code = 404
     detail = "Host not found"
+
+
+class ContainerNotFoundException(APIException):
+    status_code = 404
+    detail = "Container not found"

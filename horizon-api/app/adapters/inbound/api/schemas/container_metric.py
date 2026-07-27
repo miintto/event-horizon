@@ -2,13 +2,11 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, model_validator
 
-from app.application.ports.usecase.container_metric_use_case import (
-    ContainerMetricQuery,
-)
-from app.application.ports.usecase.metric_use_case import (
+from app.application.ports.usecase.collect_use_case import (
     ContainerCollectItem,
     ContainerMetricDatapoint,
 )
+from app.application.ports.usecase.container_metric_use_case import ContainerMetricQuery
 from app.domain.enums import AggregateInterval, ContainerMetricKind
 from app.domain.models.container import ContainerState
 from app.domain.models.container_metric import ContainerMetricSeries

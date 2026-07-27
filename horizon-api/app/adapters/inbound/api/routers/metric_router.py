@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, Query, status
 
 from app.adapters.inbound.api.dependencies import (
+    get_collect_service,
     get_container_metric_service,
-    get_metric_service,
+    get_host_metric_service,
 )
 from app.adapters.inbound.api.schemas.container_metric import (
     ContainerMetricQueryParam,
@@ -14,10 +15,11 @@ from app.adapters.inbound.api.schemas.host_metric import (
     HostMetricQueryParam,
     HostMetricSeriesResponse,
 )
+from app.application.ports.usecase.collect_use_case import CollectUseCase
 from app.application.ports.usecase.container_metric_use_case import (
     ContainerMetricUseCase,
 )
-from app.application.ports.usecase.metric_use_case import MetricUseCase
+from app.application.ports.usecase.host_metric_use_case import HostMetricUseCase
 
 router = APIRouter(prefix="/metrics", tags=["metric"])
 
@@ -29,7 +31,7 @@ router = APIRouter(prefix="/metrics", tags=["metric"])
 )
 async def query_host_metrics(
     query: HostMetricQueryParam = Query(),
-    service: MetricUseCase = Depends(get_metric_service),
+    service: HostMetricUseCase = Depends(get_host_metric_service),
 ):
     series = await service.query(query.to_query())
     return [HostMetricSeriesResponse.from_domain(s) for s in series]
@@ -42,7 +44,7 @@ async def query_host_metrics(
 )
 async def collect_host_metrics(
     body: HostMetricBatchRequest,
-    service: MetricUseCase = Depends(get_metric_service),
+    service: CollectUseCase = Depends(get_collect_service),
 ):
     result = await service.collect(body.to_command())
     return HostMetricCollectResponse.from_result(result)

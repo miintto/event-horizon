@@ -6,12 +6,12 @@ from pydantic import BaseModel, Field, model_validator
 from app.adapters.inbound.api.schemas.container_metric import (
     ContainerCollectItemRequest,
 )
-from app.application.ports.usecase.metric_use_case import (
-    HostMetricCollectCommand,
-    HostMetricCollectResult,
+from app.application.ports.usecase.collect_use_case import (
+    CollectCommand,
+    CollectResult,
     HostMetricDatapoint,
-    HostMetricQuery,
 )
+from app.application.ports.usecase.host_metric_use_case import HostMetricQuery
 from app.domain.enums import AggregateInterval, MetricKind
 from app.domain.models.host_metric import HostMetricSeries
 
@@ -53,8 +53,8 @@ class HostMetricBatchRequest(BaseModel):
     datapoints: list[HostMetricDatapointRequest]
     containers: list[ContainerCollectItemRequest] = Field(default_factory=list)
 
-    def to_command(self) -> HostMetricCollectCommand:
-        return HostMetricCollectCommand(
+    def to_command(self) -> CollectCommand:
+        return CollectCommand(
             agent_uuid=self.agent_uuid,
             hostname=self.hostname,
             datapoints=[dp.to_datapoint() for dp in self.datapoints],
@@ -67,7 +67,7 @@ class HostMetricCollectResponse(BaseModel):
     container_ingested: int
 
     @classmethod
-    def from_result(cls, result: HostMetricCollectResult) -> HostMetricCollectResponse:
+    def from_result(cls, result: CollectResult) -> HostMetricCollectResponse:
         return cls(
             ingested=result.ingested, container_ingested=result.container_ingested
         )

@@ -3,10 +3,9 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from app.domain.enums import AggregateInterval, MetricKind
 from app.domain.models.container import Container, ContainerState
 from app.domain.models.container_metric import ContainerMetric
-from app.domain.models.host_metric import HostMetric, HostMetricSeries
+from app.domain.models.host_metric import HostMetric
 
 
 @dataclass
@@ -100,7 +99,7 @@ class ContainerCollectItem:
 
 
 @dataclass
-class HostMetricCollectCommand:
+class CollectCommand:
     agent_uuid: uuid.UUID
     hostname: str
     datapoints: list[HostMetricDatapoint]
@@ -108,25 +107,11 @@ class HostMetricCollectCommand:
 
 
 @dataclass
-class HostMetricCollectResult:
+class CollectResult:
     ingested: int
     container_ingested: int = 0
 
 
-@dataclass
-class HostMetricQuery:
-    metric: MetricKind
-    host_ids: list[int] | None
-    interval: AggregateInterval
-    start_at: datetime
-    end_at: datetime
-
-
-class MetricUseCase(ABC):
+class CollectUseCase(ABC):
     @abstractmethod
-    async def collect(
-        self, command: HostMetricCollectCommand
-    ) -> HostMetricCollectResult: ...
-
-    @abstractmethod
-    async def query(self, query: HostMetricQuery) -> list[HostMetricSeries]: ...
+    async def collect(self, command: CollectCommand) -> CollectResult: ...

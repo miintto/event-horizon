@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
 from app.adapters.outbound.persistence.base import BasePersistenceAdapter
@@ -9,6 +10,22 @@ from app.domain.models.container import Container
 
 
 class ContainerPersistenceAdapter(BasePersistenceAdapter, ContainerRepository):
+    async def find_by_id(self, id_: int) -> Container | None:
+        session = self._scoped_session()
+        result = await session.execute(
+            select(ContainerModel).where(ContainerModel.id == id_)
+        )
+        model = result.scalar_one_or_none()
+        return model.to_domain() if model else None
+
+    async def find_all(self, host_id: int | None) -> list[Container]:
+        session = self._scoped_session()
+        stmt = select(ContainerModel).order_by(ContainerModel.id)
+        if host_id is not None:
+            stmt = stmt.where(ContainerModel.host_id == host_id)
+        result = await session.execute(stmt)
+        return [model.to_domain() for model in result.scalars().all()]
+
     async def upsert_all(self, containers: list[Container]) -> list[Container]:
         if not containers:
             return []
