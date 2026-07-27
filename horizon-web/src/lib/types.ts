@@ -32,3 +32,43 @@ export interface HostMetricSeries {
   host_id: number;
   points: MetricPoint[];
 }
+
+export type ContainerState =
+  | "created"
+  | "running"
+  | "paused"
+  | "restarting"
+  | "removing"
+  | "exited"
+  | "dead";
+
+export interface Container {
+  id: number;
+  host_id: number;
+  docker_id: string;
+  name: string;
+  image: string;
+  state: ContainerState;
+  compose_project?: string;
+  compose_service?: string;
+  exit_code?: number;
+  started_at?: string;
+  last_seen_at?: string;
+  created_at?: string;
+}
+
+export type ContainerMetricKind =
+  | "cpu_usage"
+  | "cpu_throttled_time"
+  | "memory_used"
+  | "memory_limit"
+  | "block_read_rate"
+  | "block_write_rate"
+  | "net_rx_rate"
+  | "net_tx_rate"
+  | "pids";
+
+export interface ContainerMetricSeries {
+  container_id: number;
+  points: MetricPoint[];
+}

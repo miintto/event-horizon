@@ -1,4 +1,4 @@
-export type MetricFormat = "percent" | "bytes" | "rate" | "load";
+export type MetricFormat = "percent" | "bytes" | "rate" | "load" | "count";
 
 function formatBytes(value: number): string {
   const units = ["B", "KB", "MB", "GB", "TB", "PB"];
@@ -22,6 +22,8 @@ export function formatMetric(format: MetricFormat, value: number): string {
       return `${formatBytes(value)}/s`;
     case "load":
       return value.toFixed(2);
+    case "count":
+      return value.toFixed(0);
   }
 }
 

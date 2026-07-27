@@ -1,5 +1,9 @@
 import type { MetricFormat } from "@/lib/format";
-import type { AggregateInterval, MetricKind } from "@/lib/types";
+import type {
+  AggregateInterval,
+  ContainerMetricKind,
+  MetricKind,
+} from "@/lib/types";
 
 export const INTERVAL_OPTIONS: { value: AggregateInterval; label: string }[] = [
   { value: "1m", label: "1 min" },
@@ -44,10 +48,39 @@ export function finestIntervalFor(range: RangeKey): AggregateInterval {
   return valid[0].value;
 }
 
-export interface ChartDef {
+/** URL search params (interval, range) 를 유효한 값으로 해석한다. */
+export function resolveRange(
+  rawInterval: string | null,
+  rawRange: string | null,
+): { interval: AggregateInterval; range: RangeKey } {
+  const parsedInterval: AggregateInterval = INTERVAL_OPTIONS.some(
+    (o) => o.value === rawInterval,
+  )
+    ? (rawInterval as AggregateInterval)
+    : DEFAULT_INTERVAL;
+  const range: RangeKey = RANGE_OPTIONS.some((o) => o.value === rawRange)
+    ? (rawRange as RangeKey)
+    : DEFAULT_RANGE;
+  const interval: AggregateInterval = isComboAllowed(parsedInterval, range)
+    ? parsedInterval
+    : finestIntervalFor(range);
+  return { interval, range };
+}
+
+/** RangeKey 로부터 [startAt, endAt] ISO 문자열 윈도우를 만든다. */
+export function rangeWindow(range: RangeKey): {
+  startAt: string;
+  endAt: string;
+} {
+  const endAt = new Date();
+  const startAt = new Date(endAt.getTime() - rangeMs(range));
+  return { startAt: startAt.toISOString(), endAt: endAt.toISOString() };
+}
+
+export interface ChartDef<K extends string = MetricKind> {
   title: string;
   format: MetricFormat;
-  series: { label: string; kind: MetricKind; colorVar: string }[];
+  series: { label: string; kind: K; colorVar: string }[];
 }
 
 export const HOST_CHARTS: ChartDef[] = [
@@ -88,5 +121,52 @@ export const HOST_CHARTS: ChartDef[] = [
       { label: "5m", kind: "load_avg_5", colorVar: "var(--viz-series-2)" },
       { label: "15m", kind: "load_avg_15", colorVar: "var(--viz-series-3)" },
     ],
+  },
+];
+
+export const CONTAINER_CHARTS: ChartDef<ContainerMetricKind>[] = [
+  {
+    title: "CPU (cores)",
+    format: "load",
+    series: [
+      { label: "cores", kind: "cpu_usage", colorVar: "var(--viz-series-1)" },
+    ],
+  },
+  {
+    title: "Memory",
+    format: "bytes",
+    series: [
+      { label: "used", kind: "memory_used", colorVar: "var(--viz-series-1)" },
+      { label: "limit", kind: "memory_limit", colorVar: "var(--viz-series-2)" },
+    ],
+  },
+  {
+    title: "Block I/O",
+    format: "rate",
+    series: [
+      {
+        label: "read",
+        kind: "block_read_rate",
+        colorVar: "var(--viz-series-1)",
+      },
+      {
+        label: "write",
+        kind: "block_write_rate",
+        colorVar: "var(--viz-series-2)",
+      },
+    ],
+  },
+  {
+    title: "Network",
+    format: "rate",
+    series: [
+      { label: "rx", kind: "net_rx_rate", colorVar: "var(--viz-series-1)" },
+      { label: "tx", kind: "net_tx_rate", colorVar: "var(--viz-series-2)" },
+    ],
+  },
+  {
+    title: "Processes",
+    format: "count",
+    series: [{ label: "pids", kind: "pids", colorVar: "var(--viz-series-1)" }],
   },
 ];
