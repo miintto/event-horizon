@@ -34,9 +34,17 @@ pub struct Config {
     #[serde(default = "default_http_timeout")]
     pub http_timeout_secs: u64,
 
-    /// Maximum number of datapoints held in the send buffer.
+    /// Maximum number of host datapoints held in the send buffer.
     #[serde(default = "default_max_buffer_size")]
     pub max_buffer_size: usize,
+
+    /// Whether to collect Docker container metrics.
+    #[serde(default = "default_collect_containers")]
+    pub collect_containers: bool,
+
+    /// Maximum number of container observations held in the send buffer.
+    #[serde(default = "default_max_container_buffer_size")]
+    pub max_container_buffer_size: usize,
 }
 
 fn default_collect_interval() -> u64 {
@@ -61,6 +69,14 @@ fn default_http_timeout() -> u64 {
 
 fn default_max_buffer_size() -> usize {
     2880
+}
+
+fn default_collect_containers() -> bool {
+    true
+}
+
+fn default_max_container_buffer_size() -> usize {
+    28800
 }
 
 impl Config {
@@ -89,6 +105,9 @@ impl Config {
         }
         if self.max_buffer_size == 0 {
             bail!("max_buffer_size must be greater than or equal to 1");
+        }
+        if self.max_container_buffer_size == 0 {
+            bail!("max_container_buffer_size must be greater than or equal to 1");
         }
         Ok(())
     }

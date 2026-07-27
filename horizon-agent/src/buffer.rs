@@ -1,13 +1,11 @@
 use std::collections::VecDeque;
 
-use crate::collector::MetricDatapoint;
-
-pub struct MetricBuffer {
-    items: VecDeque<MetricDatapoint>,
+pub struct RingBuffer<T> {
+    items: VecDeque<T>,
     max_size: usize,
 }
 
-impl MetricBuffer {
+impl<T: Clone> RingBuffer<T> {
     pub fn new(max_size: usize) -> Self {
         Self {
             items: VecDeque::with_capacity(max_size),
@@ -15,14 +13,14 @@ impl MetricBuffer {
         }
     }
 
-    pub fn add(&mut self, datapoint: MetricDatapoint) {
+    pub fn add(&mut self, item: T) {
         if self.items.len() >= self.max_size {
             self.items.pop_front();
         }
-        self.items.push_back(datapoint);
+        self.items.push_back(item);
     }
 
-    pub fn snapshot(&self) -> Vec<MetricDatapoint> {
+    pub fn snapshot(&self) -> Vec<T> {
         self.items.iter().cloned().collect()
     }
 

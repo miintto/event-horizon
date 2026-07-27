@@ -3,7 +3,7 @@ use serde::Serialize;
 use sysinfo::{Disks, Networks, System};
 
 #[derive(Debug, Clone, Serialize)]
-pub struct MetricDatapoint {
+pub struct HostMetricDatapoint {
     pub collected_at: DateTime<Utc>,
     pub cpu_usage: f32,
     pub memory_used: u64,
@@ -20,14 +20,14 @@ pub struct MetricDatapoint {
     pub load_avg_15: Option<f64>,
 }
 
-pub struct Collector {
+pub struct HostCollector {
     system: System,
     disks: Disks,
     networks: Networks,
     disk_path: String,
 }
 
-impl Collector {
+impl HostCollector {
     pub fn new(disk_path: &str) -> Self {
         let mut system = System::new();
         system.refresh_cpu_usage();
@@ -40,7 +40,7 @@ impl Collector {
         }
     }
 
-    pub fn collect(&mut self) -> MetricDatapoint {
+    pub fn collect(&mut self) -> HostMetricDatapoint {
         self.system.refresh_cpu_usage();
         self.system.refresh_memory();
         self.disks.refresh(true);
@@ -50,7 +50,7 @@ impl Collector {
         let (net_rx, net_tx) = self.network_totals();
         let load = Self::load_average();
 
-        MetricDatapoint {
+        HostMetricDatapoint {
             collected_at: Utc::now(),
             cpu_usage: self.system.global_cpu_usage(),
             memory_used: self.system.used_memory(),
@@ -88,7 +88,7 @@ impl Collector {
     fn network_totals(&self) -> (u64, u64) {
         let mut rx = 0u64;
         let mut tx = 0u64;
-        for (_, data) in self.networks.list() {
+        for data in self.networks.list().values() {
             rx = rx.saturating_add(data.total_received());
             tx = tx.saturating_add(data.total_transmitted());
         }

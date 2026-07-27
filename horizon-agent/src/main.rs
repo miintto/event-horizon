@@ -1,6 +1,7 @@
 mod buffer;
-mod collector;
 mod config;
+mod host_collector;
+mod container_collector;
 mod identity;
 mod runner;
 mod shipper;
@@ -9,9 +10,10 @@ use anyhow::Result;
 use sysinfo::System;
 use tracing_subscriber::EnvFilter;
 
-use crate::buffer::MetricBuffer;
-use crate::collector::Collector;
+use crate::buffer::RingBuffer;
+use crate::host_collector::HostCollector;
 use crate::config::Config;
+use crate::container_collector::ContainerCollector;
 use crate::shipper::Shipper;
 
 fn config_path() -> String {
@@ -31,11 +33,26 @@ async fn main() -> Result<()> {
     let agent_uuid = identity::load_or_create_agent_uuid(&config.agent_id_path)?;
     let hostname = System::host_name().unwrap_or_else(|| "unknown".to_string());
 
-    let buffer = MetricBuffer::new(config.max_buffer_size);
-    let collector = Collector::new(&config.disk_path);
+    let buffer = RingBuffer::new(config.max_buffer_size);
+    let container_buffer = RingBuffer::new(config.max_container_buffer_size);
+    let collector = HostCollector::new(&config.disk_path);
+    let container_collector = if config.collect_containers {
+        ContainerCollector::connect()
+    } else {
+        ContainerCollector::disabled()
+    };
     let shipper = Shipper::new(&config, agent_uuid, hostname)?;
 
-    runner::run(&config, collector, buffer, shipper, shutdown_signal()).await;
+    runner::run(
+        &config,
+        collector,
+        container_collector,
+        buffer,
+        container_buffer,
+        shipper,
+        shutdown_signal(),
+    )
+    .await;
     Ok(())
 }
 

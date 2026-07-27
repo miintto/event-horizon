@@ -11,3 +11,5 @@ api_key = "xxxxx"
 # disk_path = "/"
 # http_timeout_secs = 10
 # max_buffer_size = 2880
+# collect_containers = true
+# max_container_buffer_size = 28800

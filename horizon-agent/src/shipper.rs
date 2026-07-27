@@ -5,14 +5,16 @@ use reqwest::Client;
 use serde::Serialize;
 use uuid::Uuid;
 
-use crate::collector::MetricDatapoint;
 use crate::config::Config;
+use crate::container_collector::ContainerCollectItem;
+use crate::host_collector::HostMetricDatapoint;
 
 #[derive(Serialize)]
 struct MetricBatch<'a> {
     agent_uuid: Uuid,
     hostname: &'a str,
-    datapoints: &'a [MetricDatapoint],
+    datapoints: &'a [HostMetricDatapoint],
+    containers: &'a [ContainerCollectItem],
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -49,11 +51,16 @@ impl Shipper {
         })
     }
 
-    pub async fn send(&self, samples: &[MetricDatapoint]) -> SendOutcome {
+    pub async fn send(
+        &self,
+        datapoints: &[HostMetricDatapoint],
+        containers: &[ContainerCollectItem],
+    ) -> SendOutcome {
         let payload = MetricBatch {
             agent_uuid: self.agent_uuid,
             hostname: &self.hostname,
-            datapoints: samples,
+            datapoints,
+            containers,
         };
 
         let response = match self.client.post(&self.url).json(&payload).send().await {

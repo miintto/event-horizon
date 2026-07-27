@@ -1,16 +1,19 @@
 use std::time::Duration;
 
-use tokio::time::{interval, MissedTickBehavior};
+use tokio::time::{MissedTickBehavior, interval};
 
-use crate::buffer::MetricBuffer;
-use crate::collector::Collector;
+use crate::buffer::RingBuffer;
 use crate::config::Config;
+use crate::host_collector::{HostCollector, HostMetricDatapoint};
+use crate::container_collector::{self, ContainerCollector, ContainerObservation};
 use crate::shipper::{SendOutcome, Shipper};
 
 pub async fn run(
     config: &Config,
-    mut collector: Collector,
-    mut buffer: MetricBuffer,
+    mut collector: HostCollector,
+    container_collector: ContainerCollector,
+    mut buffer: RingBuffer<HostMetricDatapoint>,
+    mut container_buffer: RingBuffer<ContainerObservation>,
     shipper: Shipper,
     shutdown: impl std::future::Future<Output = ()>,
 ) {
@@ -28,9 +31,12 @@ pub async fn run(
         tokio::select! {
             _ = collect_tick.tick() => {
                 buffer.add(collector.collect());
+                for observation in container_collector.collect().await {
+                    container_buffer.add(observation);
+                }
             }
             _ = send_tick.tick() => {
-                flush(&mut buffer, &shipper).await;
+                flush(&mut buffer, &mut container_buffer, &shipper).await;
             }
             _ = &mut shutdown => {
                 break;
@@ -38,27 +44,48 @@ pub async fn run(
         }
     }
 
-    flush(&mut buffer, &shipper).await;
+    flush(&mut buffer, &mut container_buffer, &shipper).await;
     tracing::info!("agent stopped");
 }
 
-async fn flush(buffer: &mut MetricBuffer, shipper: &Shipper) {
-    let samples = buffer.snapshot();
-    if samples.is_empty() {
+async fn flush(
+    buffer: &mut RingBuffer<HostMetricDatapoint>,
+    container_buffer: &mut RingBuffer<ContainerObservation>,
+    shipper: &Shipper,
+) {
+    let datapoints = buffer.snapshot();
+    let observations = container_buffer.snapshot();
+    if datapoints.is_empty() && observations.is_empty() {
         return;
     }
 
-    match shipper.send(&samples).await {
+    let containers = container_collector::group(observations.clone());
+
+    match shipper.send(&datapoints, &containers).await {
         SendOutcome::Delivered => {
-            buffer.remove_front(samples.len());
-            tracing::info!("Sent {} datapoints", samples.len());
+            buffer.remove_front(datapoints.len());
+            container_buffer.remove_front(observations.len());
+            tracing::info!(
+                "Sent {} datapoints, {} containers",
+                datapoints.len(),
+                containers.len()
+            );
         }
         SendOutcome::Rejected => {
-            buffer.remove_front(samples.len());
-            tracing::warn!("Dropped {} rejected datapoints", samples.len());
+            buffer.remove_front(datapoints.len());
+            container_buffer.remove_front(observations.len());
+            tracing::warn!(
+                "Dropped rejected batch ({} datapoints, {} containers)",
+                datapoints.len(),
+                containers.len()
+            );
         }
         SendOutcome::Retry => {
-            tracing::warn!("Send failed, {} datapoints buffered", buffer.len());
+            tracing::warn!(
+                "Send failed, {} datapoints / {} container observations buffered",
+                buffer.len(),
+                container_buffer.len()
+            );
         }
     }
 }
