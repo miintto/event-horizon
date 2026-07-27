@@ -3,6 +3,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from app.adapters.inbound.api.schemas.container_metric import (
+    ContainerCollectItemRequest,
+)
 from app.application.ports.usecase.host_metric_use_case import (
     HostMetricCollectCommand,
     HostMetricCollectResult,
@@ -48,21 +51,26 @@ class HostMetricBatchRequest(BaseModel):
     agent_uuid: UUID
     hostname: str = Field(max_length=255)
     datapoints: list[HostMetricDatapointRequest]
+    containers: list[ContainerCollectItemRequest] = Field(default_factory=list)
 
     def to_command(self) -> HostMetricCollectCommand:
         return HostMetricCollectCommand(
             agent_uuid=self.agent_uuid,
             hostname=self.hostname,
             datapoints=[dp.to_datapoint() for dp in self.datapoints],
+            containers=[c.to_collect_item() for c in self.containers],
         )
 
 
 class HostMetricCollectResponse(BaseModel):
     ingested: int
+    container_ingested: int
 
     @classmethod
     def from_result(cls, result: HostMetricCollectResult) -> HostMetricCollectResponse:
-        return cls(ingested=result.ingested)
+        return cls(
+            ingested=result.ingested, container_ingested=result.container_ingested
+        )
 
 
 class HostMetricQueryParam(BaseModel):

@@ -14,6 +14,18 @@ class MetricKind(StrEnum):
     NET_TX_RATE = "net_tx_rate"
 
 
+class ContainerMetricKind(StrEnum):
+    CPU_USAGE = "cpu_usage"
+    CPU_THROTTLED_TIME = "cpu_throttled_time"
+    MEMORY_USED = "memory_used"
+    MEMORY_LIMIT = "memory_limit"
+    BLOCK_READ_RATE = "block_read_rate"
+    BLOCK_WRITE_RATE = "block_write_rate"
+    NET_RX_RATE = "net_rx_rate"
+    NET_TX_RATE = "net_tx_rate"
+    PIDS = "pids"
+
+
 class AggregateInterval(StrEnum):
     ONE_MINUTE = "1m"
     FIVE_MINUTES = "5m"

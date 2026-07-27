@@ -1,3 +1,9 @@
+from app.adapters.outbound.persistence.container_metric_persistence_adapter import (
+    ContainerMetricPersistenceAdapter,
+)
+from app.adapters.outbound.persistence.container_persistence_adapter import (
+    ContainerPersistenceAdapter,
+)
 from app.adapters.outbound.persistence.host_metric_persistence_adapter import (
     HostMetricPersistenceAdapter,
 )
@@ -16,6 +22,8 @@ from app.application.services.host_metric.host_metric_service import (
 # Repository
 _host_repository = HostPersistenceAdapter()
 _host_metric_repository = HostMetricPersistenceAdapter()
+_container_repository = ContainerPersistenceAdapter()
+_container_metric_repository = ContainerMetricPersistenceAdapter()
 
 # Service
 _host_service = HostService(
@@ -24,6 +32,8 @@ _host_service = HostService(
 _host_metric_service = HostMetricService(
     host_metric_repository=_host_metric_repository,
     host_repository=_host_repository,
+    container_repository=_container_repository,
+    container_metric_repository=_container_metric_repository,
 )
 
 
