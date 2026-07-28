@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Query, status
 
+from app.adapters.inbound.api.auth import verify_agent
 from app.adapters.inbound.api.dependencies import (
     get_collect_service,
     get_container_metric_service,
@@ -41,6 +42,7 @@ async def query_host_metrics(
     "/hosts",
     response_model=HostMetricCollectResponse,
     status_code=status.HTTP_202_ACCEPTED,
+    dependencies=[Depends(verify_agent)],
 )
 async def collect_host_metrics(
     body: HostMetricBatchRequest,

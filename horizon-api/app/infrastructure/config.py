@@ -6,6 +6,8 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = ["*"]
 
+    ingest_api_key: str
+
     db_host: str
     db_port: int = 5432
     db_name: str

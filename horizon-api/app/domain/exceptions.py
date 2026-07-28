@@ -3,6 +3,11 @@ class APIException(Exception):
     detail: str = "Server Error"
 
 
+class UnauthorizedException(APIException):
+    status_code = 401
+    detail = "Unauthorized"
+
+
 class HostNotFoundException(APIException):
     status_code = 404
     detail = "Host not found"
