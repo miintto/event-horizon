@@ -9,9 +9,8 @@ pub struct Config {
     /// Base URL of the horizon-api server.
     pub server_url: String,
 
-    /// Server auth key. Currently not sent; parsed for future authentication.
+    /// Bearer token sent to the server (Authorization header) for agent auth.
     #[serde(default)]
-    #[allow(dead_code)]
     pub api_key: Option<String>,
 
     /// Interval between metric collections, in seconds.

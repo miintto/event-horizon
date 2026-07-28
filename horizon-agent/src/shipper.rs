@@ -27,6 +27,7 @@ pub enum SendOutcome {
 pub struct Shipper {
     client: Client,
     url: String,
+    api_key: Option<String>,
     agent_uuid: Uuid,
     hostname: String,
 }
@@ -46,6 +47,7 @@ impl Shipper {
         Ok(Self {
             client,
             url,
+            api_key: config.api_key.clone(),
             agent_uuid,
             hostname,
         })
@@ -63,7 +65,12 @@ impl Shipper {
             containers,
         };
 
-        let response = match self.client.post(&self.url).json(&payload).send().await {
+        let mut request = self.client.post(&self.url).json(&payload);
+        if let Some(api_key) = &self.api_key {
+            request = request.bearer_auth(api_key);
+        }
+
+        let response = match request.send().await {
             Ok(response) => response,
             Err(err) => {
                 tracing::warn!("Metric send failed: {err}");
