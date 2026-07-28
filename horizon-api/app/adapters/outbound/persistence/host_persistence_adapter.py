@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
 
 from app.adapters.outbound.persistence.base import BasePersistenceAdapter
@@ -25,23 +25,32 @@ class HostPersistenceAdapter(BasePersistenceAdapter, HostRepository):
     async def upsert_by_agent_uuid(self, agent_uuid: UUID, hostname: str) -> Host:
         session = self._scoped_session()
         now = datetime.now(UTC)
-        stmt = (
-            insert(HostModel)
-            .values(
-                agent_uuid=agent_uuid,
-                hostname=hostname,
-                status=HostStatus.ONLINE,
-                last_seen_at=now,
+
+        updated = (
+            await session.execute(
+                update(HostModel)
+                .where(HostModel.agent_uuid == agent_uuid)
+                .values(status=HostStatus.ONLINE, last_seen_at=now)
+                .returning(HostModel)
             )
-            .on_conflict_do_update(
-                index_elements=[HostModel.agent_uuid],
-                set_={
-                    "hostname": hostname,
-                    "status": HostStatus.ONLINE,
-                    "last_seen_at": now,
-                },
+        ).scalar_one_or_none()
+        if updated is not None:
+            return updated.to_domain()
+
+        inserted = (
+            await session.execute(
+                insert(HostModel)
+                .values(
+                    agent_uuid=agent_uuid,
+                    hostname=hostname,
+                    status=HostStatus.ONLINE,
+                    last_seen_at=now,
+                )
+                .on_conflict_do_update(
+                    index_elements=[HostModel.agent_uuid],
+                    set_={"status": HostStatus.ONLINE, "last_seen_at": now},
+                )
+                .returning(HostModel)
             )
-            .returning(HostModel)
-        )
-        result = await session.execute(stmt)
-        return result.scalar_one().to_domain()
+        ).scalar_one()
+        return inserted.to_domain()

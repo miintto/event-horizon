@@ -32,7 +32,6 @@ class ContainerMetricPersistenceAdapter(
         ContainerMetricKind.PIDS: ContainerMetricModel.pids,
     }
 
-    # 누적 카운터를 (max - min) / seconds 로 초당 증가율(rate)로 변환하는 지표
     _RATE_METRICS = (
         ContainerMetricKind.BLOCK_READ_RATE,
         ContainerMetricKind.BLOCK_WRITE_RATE,

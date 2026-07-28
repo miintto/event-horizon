@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import select, tuple_
 from sqlalchemy.dialects.postgresql import insert
 
 from app.adapters.outbound.persistence.base import BasePersistenceAdapter
@@ -32,38 +32,68 @@ class ContainerPersistenceAdapter(BasePersistenceAdapter, ContainerRepository):
 
         session = self._scoped_session()
         now = datetime.now(UTC)
-        deduped = {(c.host_id, c.docker_id): c for c in containers}
+        deduped = list({(c.host_id, c.docker_id): c for c in containers}.values())
 
-        stmt = insert(ContainerModel).values(
-            [
-                {
-                    "host_id": container.host_id,
-                    "docker_id": container.docker_id,
-                    "name": container.name,
-                    "image": container.image,
-                    "state": container.state,
-                    "compose_project": container.compose_project,
-                    "compose_service": container.compose_service,
-                    "exit_code": container.exit_code,
-                    "started_at": container.started_at,
-                    "last_seen_at": now,
-                }
-                for container in deduped.values()
-            ]
+        keys = [(c.host_id, c.docker_id) for c in deduped]
+        existing = (
+            (
+                await session.execute(
+                    select(ContainerModel).where(
+                        tuple_(ContainerModel.host_id, ContainerModel.docker_id).in_(
+                            keys
+                        )
+                    )
+                )
+            )
+            .scalars()
+            .all()
         )
-        stmt = stmt.on_conflict_do_update(
-            index_elements=[ContainerModel.host_id, ContainerModel.docker_id],
-            set_={
-                "name": stmt.excluded.name,
-                "image": stmt.excluded.image,
-                "state": stmt.excluded.state,
-                "compose_project": stmt.excluded.compose_project,
-                "compose_service": stmt.excluded.compose_service,
-                "exit_code": stmt.excluded.exit_code,
-                "started_at": stmt.excluded.started_at,
-                "last_seen_at": stmt.excluded.last_seen_at,
-            },
-        ).returning(ContainerModel)
+        existing_by_key = {(m.host_id, m.docker_id): m for m in existing}
 
-        result = await session.execute(stmt)
-        return [model.to_domain() for model in result.scalars().all()]
+        result: list[Container] = []
+
+        for c in deduped:
+            model = existing_by_key.get((c.host_id, c.docker_id))
+            if model is None:
+                continue
+            model.state = c.state
+            model.exit_code = c.exit_code
+            model.started_at = c.started_at
+            model.last_seen_at = now
+            result.append(model.to_domain())
+
+        new_items = [
+            c for c in deduped if (c.host_id, c.docker_id) not in existing_by_key
+        ]
+        if new_items:
+            stmt = (
+                insert(ContainerModel)
+                .values(
+                    [
+                        {
+                            "host_id": c.host_id,
+                            "docker_id": c.docker_id,
+                            "name": c.name,
+                            "image": c.image,
+                            "state": c.state,
+                            "compose_project": c.compose_project,
+                            "compose_service": c.compose_service,
+                            "exit_code": c.exit_code,
+                            "started_at": c.started_at,
+                            "last_seen_at": now,
+                        }
+                        for c in new_items
+                    ]
+                )
+                .on_conflict_do_nothing(
+                    index_elements=[
+                        ContainerModel.host_id,
+                        ContainerModel.docker_id,
+                    ]
+                )
+                .returning(ContainerModel)
+            )
+            inserted = (await session.execute(stmt)).scalars().all()
+            result.extend(model.to_domain() for model in inserted)
+
+        return result
