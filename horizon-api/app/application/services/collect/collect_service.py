@@ -1,3 +1,5 @@
+from datetime import UTC, datetime, timedelta
+
 from app.application.ports.repository.container_metric_repository import (
     ContainerMetricRepository,
 )
@@ -20,11 +22,13 @@ class CollectService(CollectUseCase):
         host_repository: HostRepository,
         container_repository: ContainerRepository,
         container_metric_repository: ContainerMetricRepository,
+        stale_after_secs: int,
     ):
         self._host_metric_repository = host_metric_repository
         self._host_repository = host_repository
         self._container_repository = container_repository
         self._container_metric_repository = container_metric_repository
+        self._stale_after_secs = stale_after_secs
 
     @transactional
     async def collect(self, command: CollectCommand) -> CollectResult:
@@ -35,7 +39,16 @@ class CollectService(CollectUseCase):
         ingested = await self._host_metric_repository.save_all(metrics)
         container_ingested = await self._collect_containers(host.id, command.containers)
         return CollectResult(
-            ingested=ingested, container_ingested=container_ingested
+            host_id=host.id,
+            ingested=ingested,
+            container_ingested=container_ingested,
+        )
+
+    @transactional
+    async def post_collect(self, host_id: int) -> None:
+        await self._container_repository.update_state_to_exited(
+            host_id,
+            datetime.now(UTC) - timedelta(seconds=self._stale_after_secs),
         )
 
     async def _collect_containers(

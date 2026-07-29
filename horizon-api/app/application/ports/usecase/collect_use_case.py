@@ -108,6 +108,7 @@ class CollectCommand:
 
 @dataclass
 class CollectResult:
+    host_id: int
     ingested: int
     container_ingested: int = 0
 
@@ -115,3 +116,6 @@ class CollectResult:
 class CollectUseCase(ABC):
     @abstractmethod
     async def collect(self, command: CollectCommand) -> CollectResult: ...
+
+    @abstractmethod
+    async def post_collect(self, host_id: int) -> None: ...

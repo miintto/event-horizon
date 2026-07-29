@@ -24,6 +24,7 @@ from app.application.services.container_metric.container_metric_service import (
 )
 from app.application.services.host.host_service import HostService
 from app.application.services.host_metric.host_metric_service import HostMetricService
+from app.infrastructure.config import settings
 
 # Repository
 _host_repository = HostPersistenceAdapter()
@@ -40,6 +41,7 @@ _collect_service = CollectService(
     host_repository=_host_repository,
     container_repository=_container_repository,
     container_metric_repository=_container_metric_repository,
+    stale_after_secs=settings.container_stale_after_secs,
 )
 _host_metric_service = HostMetricService(
     host_metric_repository=_host_metric_repository,

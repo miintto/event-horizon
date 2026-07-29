@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     db_pool_size: int = 10
     db_max_overflow: int = 10
 
+    container_stale_after_secs: int = 300
+
     @property
     def database_url(self) -> str:
         return (

@@ -1,12 +1,12 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import select, tuple_
+from sqlalchemy import select, tuple_, update
 from sqlalchemy.dialects.postgresql import insert
 
 from app.adapters.outbound.persistence.base import BasePersistenceAdapter
 from app.adapters.outbound.persistence.models.container import ContainerModel
 from app.application.ports.repository.container_repository import ContainerRepository
-from app.domain.models.container import Container
+from app.domain.models.container import Container, ContainerState
 
 
 class ContainerPersistenceAdapter(BasePersistenceAdapter, ContainerRepository):
@@ -97,3 +97,17 @@ class ContainerPersistenceAdapter(BasePersistenceAdapter, ContainerRepository):
             result.extend(model.to_domain() for model in inserted)
 
         return result
+
+    async def update_state_to_exited(self, host_id: int, seen_before: datetime) -> int:
+        session = self._scoped_session()
+        stmt = (
+            update(ContainerModel)
+            .where(
+                ContainerModel.host_id == host_id,
+                ContainerModel.last_seen_at < seen_before,
+                ContainerModel.state != ContainerState.EXITED,
+            )
+            .values(state=ContainerState.EXITED)
+        )
+        result = await session.execute(stmt)
+        return result.rowcount

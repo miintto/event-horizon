@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Query, status
 
 from app.adapters.inbound.api.auth import verify_agent
 from app.adapters.inbound.api.dependencies import (
@@ -46,9 +46,11 @@ async def query_host_metrics(
 )
 async def collect_host_metrics(
     body: HostMetricBatchRequest,
+    background_tasks: BackgroundTasks,
     service: CollectUseCase = Depends(get_collect_service),
 ):
     result = await service.collect(body.to_command())
+    background_tasks.add_task(service.post_collect, result.host_id)
     return HostMetricCollectResponse.from_result(result)
 
 
