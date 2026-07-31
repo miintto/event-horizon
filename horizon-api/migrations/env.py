@@ -11,6 +11,7 @@ from app.adapters.outbound.persistence.models import (  # noqa: F401
     container_metric,
     host,
     host_metric,
+    workload,
 )
 from app.infrastructure.config import settings
 from app.infrastructure.database import Base
