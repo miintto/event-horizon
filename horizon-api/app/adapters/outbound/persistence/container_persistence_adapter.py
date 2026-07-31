@@ -23,7 +23,7 @@ class ContainerPersistenceAdapter(BasePersistenceAdapter, ContainerRepository):
         self, host_id: int | None, workload_id: int | None = None
     ) -> list[Container]:
         session = self._scoped_session()
-        stmt = select(ContainerModel).order_by(ContainerModel.id)
+        stmt = select(ContainerModel).order_by(ContainerModel.id.desc())
         if host_id is not None:
             stmt = stmt.where(ContainerModel.host_id == host_id)
         if workload_id is not None:
