@@ -45,6 +45,7 @@ export type ContainerState =
 export interface Container {
   id: number;
   host_id: number;
+  workload_id?: number;
   docker_id: string;
   name: string;
   image: string;
@@ -71,4 +72,13 @@ export type ContainerMetricKind =
 export interface ContainerMetricSeries {
   container_id: number;
   points: MetricPoint[];
+}
+
+export interface Workload {
+  id: number;
+  name: string;
+  container_count?: number;
+  running_count?: number;
+  host_count?: number;
+  created_at?: string;
 }

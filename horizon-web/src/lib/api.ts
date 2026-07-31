@@ -6,6 +6,7 @@ import type {
   Host,
   HostMetricSeries,
   MetricKind,
+  Workload,
 } from "@/lib/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -49,17 +50,36 @@ export function queryHostMetrics(
   return apiGet<HostMetricSeries[]>(`/api/metrics/hosts?${params.toString()}`);
 }
 
-export function listContainers(hostId?: number): Promise<Container[]> {
-  const params = new URLSearchParams();
-  if (hostId != null) {
-    params.set("host_id", String(hostId));
+export function getContainers(params?: {
+  hostId?: number;
+  workloadId?: number;
+}): Promise<Container[]> {
+  const search = new URLSearchParams();
+  if (params?.hostId != null) {
+    search.set("host_id", String(params.hostId));
   }
-  const qs = params.toString();
+  if (params?.workloadId != null) {
+    search.set("workload_id", String(params.workloadId));
+  }
+  const qs = search.toString();
   return apiGet<Container[]>(`/api/containers${qs ? `?${qs}` : ""}`);
 }
 
 export function getContainer(containerId: number): Promise<Container> {
   return apiGet<Container>(`/api/containers/${containerId}`);
+}
+
+export function getWorkloads(hostId?: number): Promise<Workload[]> {
+  const params = new URLSearchParams();
+  if (hostId != null) {
+    params.set("host_id", String(hostId));
+  }
+  const qs = params.toString();
+  return apiGet<Workload[]>(`/api/workloads${qs ? `?${qs}` : ""}`);
+}
+
+export function getWorkload(workloadId: number): Promise<Workload> {
+  return apiGet<Workload>(`/api/workloads/${workloadId}`);
 }
 
 export interface ContainerMetricQuery {
