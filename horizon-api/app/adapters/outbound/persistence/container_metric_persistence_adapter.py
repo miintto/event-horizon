@@ -96,7 +96,5 @@ class ContainerMetricPersistenceAdapter(
                     MetricPoint(bucket=row.bucket, value=row.value) for row in rows
                 ],
             )
-            for container_id, rows in groupby(
-                result, key=lambda row: row.container_id
-            )
+            for container_id, rows in groupby(result, key=lambda row: row.container_id)
         ]

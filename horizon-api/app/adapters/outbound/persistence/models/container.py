@@ -3,6 +3,7 @@ from datetime import datetime
 from sqlalchemy import (
     DateTime,
     Enum,
+    Index,
     Integer,
     String,
     UniqueConstraint,
@@ -19,6 +20,7 @@ class ContainerModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     host_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    workload_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     docker_id: Mapped[str] = mapped_column(String(64), nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     image: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -40,12 +42,14 @@ class ContainerModel(Base):
 
     __table_args__ = (
         UniqueConstraint("host_id", "docker_id", name="uq_container_host_docker"),
+        Index("ix_container_workload_id", "workload_id"),
     )
 
     def to_domain(self) -> Container:
         return Container(
             id=self.id,
             host_id=self.host_id,
+            workload_id=self.workload_id,
             docker_id=self.docker_id,
             name=self.name,
             image=self.image,

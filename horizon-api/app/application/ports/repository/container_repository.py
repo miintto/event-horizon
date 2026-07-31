@@ -9,10 +9,15 @@ class ContainerRepository(ABC):
     async def find_by_id(self, id_: int) -> Container | None: ...
 
     @abstractmethod
-    async def find_all(self, host_id: int | None) -> list[Container]: ...
+    async def find_all(
+        self, host_id: int | None, workload_id: int | None = None
+    ) -> list[Container]: ...
 
     @abstractmethod
     async def upsert_all(self, containers: list[Container]) -> list[Container]: ...
+
+    @abstractmethod
+    async def update_workload_id_by_name(self) -> int: ...
 
     @abstractmethod
     async def update_state_to_exited(

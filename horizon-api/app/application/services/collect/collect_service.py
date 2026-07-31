@@ -60,6 +60,10 @@ class CollectService(CollectUseCase):
         containers = await self._container_repository.upsert_all(
             [item.to_domain(host_id) for item in items]
         )
+
+        if any(container.workload_id is None for container in containers):
+            await self._container_repository.update_workload_id_by_name()
+
         container_ids = {container.docker_id: container.id for container in containers}
         metrics = [
             datapoint.to_domain(container_ids[item.docker_id])

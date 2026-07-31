@@ -16,3 +16,8 @@ class HostNotFoundException(APIException):
 class ContainerNotFoundException(APIException):
     status_code = 404
     detail = "Container not found"
+
+
+class WorkloadNotFoundException(APIException):
+    status_code = 404
+    detail = "Workload not found"

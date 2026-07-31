@@ -17,5 +17,7 @@ class ContainerService(ContainerUseCase):
         return container
 
     @transactional
-    async def list_containers(self, host_id: int | None) -> list[Container]:
-        return await self._container_repository.find_all(host_id)
+    async def get_containers(
+        self, host_id: int | None, workload_id: int | None = None
+    ) -> list[Container]:
+        return await self._container_repository.find_all(host_id, workload_id)

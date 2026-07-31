@@ -5,6 +5,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 from app.adapters.outbound.persistence.base import BasePersistenceAdapter
 from app.adapters.outbound.persistence.models.container import ContainerModel
+from app.adapters.outbound.persistence.models.workload import WorkloadModel
 from app.application.ports.repository.container_repository import ContainerRepository
 from app.domain.models.container import Container, ContainerState
 
@@ -18,11 +19,15 @@ class ContainerPersistenceAdapter(BasePersistenceAdapter, ContainerRepository):
         model = result.scalar_one_or_none()
         return model.to_domain() if model else None
 
-    async def find_all(self, host_id: int | None) -> list[Container]:
+    async def find_all(
+        self, host_id: int | None, workload_id: int | None = None
+    ) -> list[Container]:
         session = self._scoped_session()
         stmt = select(ContainerModel).order_by(ContainerModel.id)
         if host_id is not None:
             stmt = stmt.where(ContainerModel.host_id == host_id)
+        if workload_id is not None:
+            stmt = stmt.where(ContainerModel.workload_id == workload_id)
         result = await session.execute(stmt)
         return [model.to_domain() for model in result.scalars().all()]
 
@@ -97,6 +102,19 @@ class ContainerPersistenceAdapter(BasePersistenceAdapter, ContainerRepository):
             result.extend(model.to_domain() for model in inserted)
 
         return result
+
+    async def update_workload_id_by_name(self) -> int:
+        session = self._scoped_session()
+        stmt = (
+            update(ContainerModel)
+            .where(
+                ContainerModel.name == WorkloadModel.name,
+                ContainerModel.workload_id.is_(None),
+            )
+            .values(workload_id=WorkloadModel.id)
+        )
+        result = await session.execute(stmt)
+        return result.rowcount
 
     async def update_state_to_exited(self, host_id: int, seen_before: datetime) -> int:
         session = self._scoped_session()

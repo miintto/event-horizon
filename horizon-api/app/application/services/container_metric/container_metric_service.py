@@ -14,9 +14,7 @@ class ContainerMetricService(ContainerMetricUseCase):
         self._container_metric_repository = container_metric_repository
 
     @transactional
-    async def query(
-        self, query: ContainerMetricQuery
-    ) -> list[ContainerMetricSeries]:
+    async def query(self, query: ContainerMetricQuery) -> list[ContainerMetricSeries]:
         return await self._container_metric_repository.aggregate_series(
             metric=query.metric,
             container_ids=query.container_ids,

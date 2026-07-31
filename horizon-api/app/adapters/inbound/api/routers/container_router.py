@@ -14,9 +14,10 @@ router = APIRouter(prefix="/containers", tags=["container"])
 )
 async def list_containers(
     host_id: int | None = None,
+    workload_id: int | None = None,
     service: ContainerUseCase = Depends(get_container_service),
 ):
-    containers = await service.list_containers(host_id=host_id)
+    containers = await service.get_containers(host_id=host_id, workload_id=workload_id)
     return [ContainerResponse.from_domain(c) for c in containers]
 
 

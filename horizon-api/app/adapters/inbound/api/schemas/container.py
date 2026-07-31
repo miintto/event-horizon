@@ -8,6 +8,7 @@ from app.domain.models.container import Container, ContainerState
 class ContainerResponse(BaseModel):
     id: int
     host_id: int
+    workload_id: int | None = None
     docker_id: str
     name: str
     image: str
@@ -24,6 +25,7 @@ class ContainerResponse(BaseModel):
         return cls(
             id=container.id,
             host_id=container.host_id,
+            workload_id=container.workload_id,
             docker_id=container.docker_id,
             name=container.name,
             image=container.image,

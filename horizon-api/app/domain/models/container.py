@@ -17,6 +17,7 @@ class ContainerState(StrEnum):
 class Container:
     id: int | None = None
     host_id: int
+    workload_id: int | None = None
     docker_id: str
     name: str
     image: str
