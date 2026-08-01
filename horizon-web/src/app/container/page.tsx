@@ -136,14 +136,6 @@ function ContainerDetail() {
   return (
     <Shell>
       <header className="mb-6">
-        {container && (
-          <Link
-            href={`/host?host_id=${container.host_id}`}
-            className="mb-2 inline-block text-xs text-neutral-500 hover:text-neutral-300"
-          >
-            ← host #{container.host_id}
-          </Link>
-        )}
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-semibold text-neutral-100">
             {container?.name ??

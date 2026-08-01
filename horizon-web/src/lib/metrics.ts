@@ -48,7 +48,6 @@ export function finestIntervalFor(range: RangeKey): AggregateInterval {
   return valid[0].value;
 }
 
-/** URL search params (interval, range) 를 유효한 값으로 해석한다. */
 export function resolveRange(
   rawInterval: string | null,
   rawRange: string | null,
@@ -67,7 +66,6 @@ export function resolveRange(
   return { interval, range };
 }
 
-/** RangeKey 로부터 [startAt, endAt] ISO 문자열 윈도우를 만든다. */
 export function rangeWindow(range: RangeKey): {
   startAt: string;
   endAt: string;
