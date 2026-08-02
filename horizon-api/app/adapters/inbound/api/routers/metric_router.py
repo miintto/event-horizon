@@ -1,6 +1,6 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, Query, status
 
-from app.adapters.inbound.api.auth import verify_agent
+from app.adapters.inbound.api.auth import verify_agent, verify_user
 from app.adapters.inbound.api.dependencies import (
     get_collect_service,
     get_container_metric_service,
@@ -29,6 +29,7 @@ router = APIRouter(prefix="/metrics", tags=["metric"])
     "/hosts",
     response_model=list[HostMetricSeriesResponse],
     response_model_exclude_none=True,
+    dependencies=[Depends(verify_user)],
 )
 async def query_host_metrics(
     query: HostMetricQueryParam = Query(),
@@ -58,6 +59,7 @@ async def collect_host_metrics(
     "/containers",
     response_model=list[ContainerMetricSeriesResponse],
     response_model_exclude_none=True,
+    dependencies=[Depends(verify_user)],
 )
 async def query_container_metrics(
     query: ContainerMetricQueryParam = Query(),

@@ -8,6 +8,10 @@ class Settings(BaseSettings):
 
     ingest_api_key: str
 
+    jwt_secret_key: str
+    jwt_algorithm: str = "HS256"
+    jwt_expire_secs: int = 60 * 60 * 24 * 7
+
     db_host: str
     db_port: int = 5432
     db_name: str
