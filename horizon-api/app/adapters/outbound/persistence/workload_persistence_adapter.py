@@ -41,10 +41,14 @@ class WorkloadPersistenceAdapter(BasePersistenceAdapter, WorkloadRepository):
                 .label("running_count"),
                 func.count(func.distinct(ContainerModel.host_id)).label("host_count"),
             )
-            .join(ContainerModel, join_condition)
+            # 인스턴스가 아직 없는 정의도 목록에 나와야 하므로 outer join
+            .outerjoin(ContainerModel, join_condition)
             .group_by(WorkloadModel.id)
             .order_by(WorkloadModel.id)
         )
+        if host_id is not None:
+            # host 필터를 준 경우엔 그 host 에 인스턴스가 있는 workload 만
+            stmt = stmt.having(func.count(ContainerModel.id) > 0)
         result = await session.execute(stmt)
         return [
             WorkloadResult(

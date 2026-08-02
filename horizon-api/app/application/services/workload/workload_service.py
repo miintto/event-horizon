@@ -43,7 +43,6 @@ class WorkloadService(WorkloadUseCase):
     async def create_workload(self, command: WorkloadCreateCommand) -> Workload:
         if await self._workload_repository.find_by_name(command.name):
             raise DuplicateWorkloadNameException
-
         workload = await self._workload_repository.save(Workload(name=command.name))
         revision = await self._create_revision(workload.id, 1, command.definition)
         workload.current_revision_id = revision.id
@@ -51,7 +50,8 @@ class WorkloadService(WorkloadUseCase):
 
     @transactional
     async def get_revisions(self, workload_id: int) -> list[WorkloadRevision]:
-        await self.get_workload(workload_id)
+        if not await self._workload_repository.find_by_id(workload_id):
+            raise WorkloadNotFoundException
         return await self._workload_revision_repository.find_all(workload_id)
 
     @transactional
@@ -65,8 +65,8 @@ class WorkloadService(WorkloadUseCase):
 
     @transactional
     async def add_revision(self, command: RevisionCreateCommand) -> WorkloadRevision:
-        await self.get_workload(command.workload_id)
-
+        if not await self._workload_repository.find_by_id(command.workload_id):
+            raise WorkloadNotFoundException
         max_revision = await self._workload_revision_repository.find_max_revision(
             command.workload_id
         )
