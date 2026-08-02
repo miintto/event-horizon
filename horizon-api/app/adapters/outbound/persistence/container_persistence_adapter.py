@@ -5,7 +5,6 @@ from sqlalchemy.dialects.postgresql import insert
 
 from app.adapters.outbound.persistence.base import BasePersistenceAdapter
 from app.adapters.outbound.persistence.models.container import ContainerModel
-from app.adapters.outbound.persistence.models.workload import WorkloadModel
 from app.application.ports.repository.container_repository import ContainerRepository
 from app.domain.models.container import Container, ContainerState
 
@@ -102,19 +101,6 @@ class ContainerPersistenceAdapter(BasePersistenceAdapter, ContainerRepository):
             result.extend(model.to_domain() for model in inserted)
 
         return result
-
-    async def update_workload_id_by_name(self) -> int:
-        session = self._scoped_session()
-        stmt = (
-            update(ContainerModel)
-            .where(
-                ContainerModel.name == WorkloadModel.name,
-                ContainerModel.workload_id.is_(None),
-            )
-            .values(workload_id=WorkloadModel.id)
-        )
-        result = await session.execute(stmt)
-        return result.rowcount
 
     async def update_state_to_exited(self, host_id: int, seen_before: datetime) -> int:
         session = self._scoped_session()

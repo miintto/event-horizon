@@ -1,4 +1,4 @@
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 
 from app.adapters.outbound.persistence.base import BasePersistenceAdapter
 from app.adapters.outbound.persistence.models.container import ContainerModel
@@ -18,9 +18,15 @@ class WorkloadPersistenceAdapter(BasePersistenceAdapter, WorkloadRepository):
         model = result.scalar_one_or_none()
         return model.to_domain() if model else None
 
-    async def find_all_with_counts(
-        self, host_id: int | None
-    ) -> list[WorkloadResult]:
+    async def find_by_name(self, name: str) -> Workload | None:
+        session = self._scoped_session()
+        result = await session.execute(
+            select(WorkloadModel).where(WorkloadModel.name == name)
+        )
+        model = result.scalar_one_or_none()
+        return model.to_domain() if model else None
+
+    async def find_all_with_counts(self, host_id: int | None) -> list[WorkloadResult]:
         session = self._scoped_session()
         join_condition = ContainerModel.workload_id == WorkloadModel.id
         if host_id is not None:
@@ -51,3 +57,20 @@ class WorkloadPersistenceAdapter(BasePersistenceAdapter, WorkloadRepository):
             )
             for model, container_count, running_count, host_count in result.all()
         ]
+
+    async def save(self, workload: Workload) -> Workload:
+        session = self._scoped_session()
+        model = WorkloadModel(name=workload.name)
+        session.add(model)
+        await session.flush()
+        return model.to_domain()
+
+    async def update_current_revision_id(
+        self, workload_id: int, revision_id: int
+    ) -> None:
+        session = self._scoped_session()
+        await session.execute(
+            update(WorkloadModel)
+            .where(WorkloadModel.id == workload_id)
+            .values(current_revision_id=revision_id)
+        )

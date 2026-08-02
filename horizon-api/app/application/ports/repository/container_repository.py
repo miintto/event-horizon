@@ -17,9 +17,6 @@ class ContainerRepository(ABC):
     async def upsert_all(self, containers: list[Container]) -> list[Container]: ...
 
     @abstractmethod
-    async def update_workload_id_by_name(self) -> int: ...
-
-    @abstractmethod
     async def update_state_to_exited(
         self, host_id: int, seen_before: datetime
     ) -> int: ...

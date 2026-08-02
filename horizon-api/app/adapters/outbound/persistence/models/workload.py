@@ -12,6 +12,7 @@ class WorkloadModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(512), nullable=False)
+    current_revision_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -22,5 +23,6 @@ class WorkloadModel(Base):
         return Workload(
             id=self.id,
             name=self.name,
+            current_revision_id=self.current_revision_id,
             created_at=self.created_at,
         )

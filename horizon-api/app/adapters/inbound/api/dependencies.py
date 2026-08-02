@@ -16,6 +16,9 @@ from app.adapters.outbound.persistence.user_persistence_adapter import (
 from app.adapters.outbound.persistence.workload_persistence_adapter import (
     WorkloadPersistenceAdapter,
 )
+from app.adapters.outbound.persistence.workload_revision_persistence_adapter import (
+    WorkloadRevisionPersistenceAdapter,
+)
 from app.adapters.outbound.security.bcrypt_password_hasher import BcryptPasswordHasher
 from app.adapters.outbound.security.jwt_token_issuer import JwtTokenIssuer
 from app.application.ports.security.token_issuer import TokenIssuer
@@ -45,6 +48,7 @@ _host_repository = HostPersistenceAdapter()
 _host_metric_repository = HostMetricPersistenceAdapter()
 _container_repository = ContainerPersistenceAdapter()
 _workload_repository = WorkloadPersistenceAdapter()
+_workload_revision_repository = WorkloadRevisionPersistenceAdapter()
 _container_metric_repository = ContainerMetricPersistenceAdapter()
 
 # Security
@@ -80,6 +84,7 @@ _container_service = ContainerService(
 )
 _workload_service = WorkloadService(
     workload_repository=_workload_repository,
+    workload_revision_repository=_workload_revision_repository,
 )
 _container_metric_service = ContainerMetricService(
     container_metric_repository=_container_metric_repository,

@@ -41,3 +41,13 @@ class ContainerNotFoundException(APIException):
 class WorkloadNotFoundException(APIException):
     status_code = 404
     detail = "Workload not found"
+
+
+class WorkloadRevisionNotFoundException(APIException):
+    status_code = 404
+    detail = "Workload revision not found"
+
+
+class DuplicateWorkloadNameException(APIException):
+    status_code = 409
+    detail = "Workload name already exists"
