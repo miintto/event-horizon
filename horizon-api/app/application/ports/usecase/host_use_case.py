@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from app.domain.models.host import Host
+from app.domain.models import Host
 
 
 class HostUseCase(ABC):
@@ -8,4 +8,4 @@ class HostUseCase(ABC):
     async def get_host(self, host_id: int) -> Host: ...
 
     @abstractmethod
-    async def list_hosts(self) -> list[Host]: ...
+    async def get_hosts(self) -> list[Host]: ...

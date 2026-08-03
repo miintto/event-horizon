@@ -1,7 +1,7 @@
 from enum import StrEnum
 
 
-class MetricKind(StrEnum):
+class HostMetricKind(StrEnum):
     CPU_USAGE = "cpu_usage"
     MEMORY_USED = "memory_used"
     MEMORY_TOTAL = "memory_total"

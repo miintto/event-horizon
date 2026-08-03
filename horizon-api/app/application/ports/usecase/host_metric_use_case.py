@@ -1,18 +1,7 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from datetime import datetime
 
-from app.domain.enums import AggregateInterval, MetricKind
-from app.domain.models.host_metric import HostMetricSeries
-
-
-@dataclass
-class HostMetricQuery:
-    metric: MetricKind
-    host_ids: list[int] | None
-    interval: AggregateInterval
-    start_at: datetime
-    end_at: datetime
+from app.application.command.metric import HostMetricQuery
+from app.domain.models import HostMetricSeries
 
 
 class HostMetricUseCase(ABC):

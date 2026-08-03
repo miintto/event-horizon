@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from app.domain.models.host_metric import MetricPoint
-
 
 @dataclass(kw_only=True)
 class ContainerMetric:
@@ -18,9 +16,3 @@ class ContainerMetric:
     net_tx: int | None = None
     extra: dict | None = None
     collected_at: datetime
-
-
-@dataclass(kw_only=True)
-class ContainerMetricSeries:
-    container_id: int
-    points: list[MetricPoint]

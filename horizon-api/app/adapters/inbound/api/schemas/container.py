@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from app.domain.models.container import Container, ContainerState
+from app.domain.models import Container, ContainerState
 
 
 class ContainerResponse(BaseModel):
@@ -23,7 +23,7 @@ class ContainerResponse(BaseModel):
     @classmethod
     def from_domain(cls, container: Container) -> ContainerResponse:
         return cls(
-            id=container.id,
+            id=container.pk,
             host_id=container.host_id,
             workload_id=container.workload_id,
             docker_id=container.docker_id,

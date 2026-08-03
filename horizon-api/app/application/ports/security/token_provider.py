@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class TokenIssuer(ABC):
+class TokenProvider(ABC):
     @abstractmethod
     def issue(self, user_id: int) -> str: ...
 

@@ -81,3 +81,7 @@ class WorkloadRevision:
     memory_limit: int | None = None
     spec: ContainerSpec
     created_at: datetime | None = None
+
+    @property
+    def pk(self) -> int:
+        return self.id  # type: ignore

@@ -7,7 +7,7 @@ from app.adapters.inbound.api.schemas.workload import (
     WorkloadResponse,
     WorkloadRevisionResponse,
 )
-from app.application.ports.usecase.workload_use_case import WorkloadUseCase
+from app.application.ports.usecase import WorkloadUseCase
 
 router = APIRouter(prefix="/workloads", tags=["workload"])
 
@@ -17,12 +17,12 @@ router = APIRouter(prefix="/workloads", tags=["workload"])
     response_model=list[WorkloadResponse],
     response_model_exclude_none=True,
 )
-async def list_workloads(
+async def get_workloads(
     host_id: int | None = None,
     service: WorkloadUseCase = Depends(get_workload_service),
 ):
-    results = await service.get_workloads(host_id=host_id)
-    return [WorkloadResponse.from_result(r) for r in results]
+    workloads = await service.get_workloads(host_id=host_id)
+    return [WorkloadResponse.from_domain(w) for w in workloads]
 
 
 @router.post(

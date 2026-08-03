@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy import DateTime, Enum, Integer, String, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.domain.models.host import Host, HostStatus
+from app.domain.models import Host, HostStatus
 from app.infrastructure.database import Base
 
 

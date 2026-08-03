@@ -1,7 +1,7 @@
-from app.application.ports.repository.host_repository import HostRepository
-from app.application.ports.usecase.host_use_case import HostUseCase
+from app.application.ports.repository import HostRepository
+from app.application.ports.usecase import HostUseCase
 from app.domain.exceptions import HostNotFoundException
-from app.domain.models.host import Host
+from app.domain.models import Host
 from app.infrastructure.transaction import transactional
 
 
@@ -17,5 +17,5 @@ class HostService(HostUseCase):
         return host
 
     @transactional
-    async def list_hosts(self) -> list[Host]:
+    async def get_hosts(self) -> list[Host]:
         return await self._host_repository.find_all()

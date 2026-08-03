@@ -1,18 +1,7 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from datetime import datetime
 
-from app.domain.enums import AggregateInterval, ContainerMetricKind
-from app.domain.models.container_metric import ContainerMetricSeries
-
-
-@dataclass
-class ContainerMetricQuery:
-    metric: ContainerMetricKind
-    container_ids: list[int] | None
-    interval: AggregateInterval
-    start_at: datetime
-    end_at: datetime
+from app.application.command.metric import ContainerMetricQuery
+from app.domain.models import ContainerMetricSeries
 
 
 class ContainerMetricUseCase(ABC):

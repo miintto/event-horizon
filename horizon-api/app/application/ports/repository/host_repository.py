@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from app.domain.models.host import Host
+from app.domain.models import Host
 
 
 class HostRepository(ABC):

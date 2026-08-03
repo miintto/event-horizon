@@ -4,10 +4,8 @@ from app.adapters.outbound.persistence.base import BasePersistenceAdapter
 from app.adapters.outbound.persistence.models.workload_revision import (
     WorkloadRevisionModel,
 )
-from app.application.ports.repository.workload_revision_repository import (
-    WorkloadRevisionRepository,
-)
-from app.domain.models.workload_revision import WorkloadRevision
+from app.application.ports.repository import WorkloadRevisionRepository
+from app.domain.models import WorkloadRevision
 
 
 class WorkloadRevisionPersistenceAdapter(

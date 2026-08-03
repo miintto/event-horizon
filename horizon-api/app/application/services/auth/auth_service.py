@@ -1,19 +1,14 @@
-from app.application.ports.repository.user_repository import UserRepository
-from app.application.ports.security.password_hasher import PasswordHasher
-from app.application.ports.security.token_issuer import TokenIssuer
-from app.application.ports.usecase.auth_use_case import (
-    AuthUseCase,
-    LoginCommand,
-    RegisterCommand,
-    TokenResult,
-)
+from app.application.command.auth import LoginCommand, RegisterCommand, TokenResult
+from app.application.ports.repository import UserRepository
+from app.application.ports.security import PasswordHasher, TokenProvider
+from app.application.ports.usecase import AuthUseCase
 from app.domain.exceptions import (
     DuplicateEmailException,
     ForbiddenException,
     InactiveUserException,
     InvalidCredentialsException,
 )
-from app.domain.models.user import User, UserRole
+from app.domain.models import User, UserRole
 from app.infrastructure.transaction import transactional
 
 
@@ -22,12 +17,12 @@ class AuthService(AuthUseCase):
         self,
         user_repository: UserRepository,
         password_hasher: PasswordHasher,
-        token_issuer: TokenIssuer,
+        token_provider: TokenProvider,
         expire_secs: int,
     ):
         self._user_repository = user_repository
         self._password_hasher = password_hasher
-        self._token_issuer = token_issuer
+        self._token_provider = token_provider
         self._expire_secs = expire_secs
 
     @transactional
@@ -82,6 +77,6 @@ class AuthService(AuthUseCase):
 
     def _issue(self, user: User) -> TokenResult:
         return TokenResult(
-            access_token=self._token_issuer.issue(user.id),
+            access_token=self._token_provider.issue(user.pk),
             expires_in=self._expire_secs,
         )

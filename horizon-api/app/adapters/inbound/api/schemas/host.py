@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from app.domain.models.host import Host, HostStatus
+from app.domain.models import Host, HostStatus
 
 
 class HostResponse(BaseModel):
@@ -17,7 +17,7 @@ class HostResponse(BaseModel):
     @classmethod
     def from_domain(cls, host: Host) -> HostResponse:
         return cls(
-            id=host.id,
+            id=host.pk,
             agent_uuid=host.agent_uuid,
             hostname=host.hostname,
             status=host.status,

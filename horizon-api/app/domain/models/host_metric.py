@@ -17,15 +17,3 @@ class HostMetric:
     load_avg_15: float | None = None
     extra: dict | None = None
     collected_at: datetime
-
-
-@dataclass(kw_only=True)
-class MetricPoint:
-    bucket: datetime
-    value: float | None
-
-
-@dataclass(kw_only=True)
-class HostMetricSeries:
-    host_id: int
-    points: list[MetricPoint]

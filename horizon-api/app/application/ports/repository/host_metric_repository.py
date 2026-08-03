@@ -1,20 +1,20 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 
-from app.domain.enums import AggregateInterval, MetricKind
-from app.domain.models.host_metric import HostMetric, HostMetricSeries
+from app.domain.enums import AggregateInterval, HostMetricKind
+from app.domain.models import HostMetric, HostMetricSeries
 
 
 class HostMetricRepository(ABC):
     @abstractmethod
-    async def save_all(self, datapoints: list[HostMetric]) -> int: ...
-
-    @abstractmethod
     async def aggregate_series(
         self,
-        metric: MetricKind,
+        metric: HostMetricKind,
         host_ids: list[int] | None,
         interval: AggregateInterval,
         start_at: datetime,
         end_at: datetime,
     ) -> list[HostMetricSeries]: ...
+
+    @abstractmethod
+    async def save_all(self, datapoints: list[HostMetric]) -> int: ...

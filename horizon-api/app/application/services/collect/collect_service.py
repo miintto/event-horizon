@@ -1,17 +1,17 @@
 from datetime import UTC, datetime, timedelta
 
-from app.application.ports.repository.container_metric_repository import (
-    ContainerMetricRepository,
-)
-from app.application.ports.repository.container_repository import ContainerRepository
-from app.application.ports.repository.host_metric_repository import HostMetricRepository
-from app.application.ports.repository.host_repository import HostRepository
-from app.application.ports.usecase.collect_use_case import (
+from app.application.command.collect import (
     CollectCommand,
     CollectResult,
-    CollectUseCase,
     ContainerCollectItem,
 )
+from app.application.ports.repository import (
+    ContainerMetricRepository,
+    ContainerRepository,
+    HostMetricRepository,
+    HostRepository,
+)
+from app.application.ports.usecase import CollectUseCase
 from app.infrastructure.transaction import transactional
 
 
@@ -35,11 +35,11 @@ class CollectService(CollectUseCase):
         host = await self._host_repository.upsert_by_agent_uuid(
             agent_uuid=command.agent_uuid, hostname=command.hostname
         )
-        metrics = [dp.to_domain(host.id) for dp in command.datapoints]
+        metrics = [dp.to_domain(host.pk) for dp in command.datapoints]
         ingested = await self._host_metric_repository.save_all(metrics)
-        container_ingested = await self._collect_containers(host.id, command.containers)
+        container_ingested = await self._collect_containers(host.pk, command.containers)
         return CollectResult(
-            host_id=host.id,
+            host_id=host.pk,
             ingested=ingested,
             container_ingested=container_ingested,
         )
@@ -60,7 +60,7 @@ class CollectService(CollectUseCase):
         containers = await self._container_repository.upsert_all(
             [item.to_domain(host_id) for item in items]
         )
-        container_ids = {container.docker_id: container.id for container in containers}
+        container_ids = {container.docker_id: container.pk for container in containers}
         metrics = [
             datapoint.to_domain(container_ids[item.docker_id])
             for item in items

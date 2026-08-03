@@ -2,13 +2,10 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 
 from app.domain.enums import AggregateInterval, ContainerMetricKind
-from app.domain.models.container_metric import ContainerMetric, ContainerMetricSeries
+from app.domain.models import ContainerMetric, ContainerMetricSeries
 
 
 class ContainerMetricRepository(ABC):
-    @abstractmethod
-    async def save_all(self, datapoints: list[ContainerMetric]) -> int: ...
-
     @abstractmethod
     async def aggregate_series(
         self,
@@ -18,3 +15,6 @@ class ContainerMetricRepository(ABC):
         start_at: datetime,
         end_at: datetime,
     ) -> list[ContainerMetricSeries]: ...
+
+    @abstractmethod
+    async def save_all(self, datapoints: list[ContainerMetric]) -> int: ...

@@ -7,7 +7,7 @@ from app.adapters.inbound.api.schemas.auth import (
     RegisterRequest,
     TokenResponse,
 )
-from app.application.ports.usecase.auth_use_case import AuthUseCase
+from app.application.ports.usecase import AuthUseCase
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 

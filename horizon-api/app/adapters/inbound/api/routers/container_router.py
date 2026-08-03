@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 
 from app.adapters.inbound.api.dependencies import get_container_service
 from app.adapters.inbound.api.schemas.container import ContainerResponse
-from app.application.ports.usecase.container_use_case import ContainerUseCase
+from app.application.ports.usecase import ContainerUseCase
 
 router = APIRouter(prefix="/containers", tags=["container"])
 
@@ -12,7 +12,7 @@ router = APIRouter(prefix="/containers", tags=["container"])
     response_model=list[ContainerResponse],
     response_model_exclude_none=True,
 )
-async def list_containers(
+async def get_containers(
     host_id: int | None = None,
     workload_id: int | None = None,
     service: ContainerUseCase = Depends(get_container_service),

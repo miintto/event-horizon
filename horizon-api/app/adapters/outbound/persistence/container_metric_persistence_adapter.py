@@ -9,12 +9,9 @@ from app.adapters.outbound.persistence.base import BasePersistenceAdapter
 from app.adapters.outbound.persistence.models.container_metric import (
     ContainerMetricModel,
 )
-from app.application.ports.repository.container_metric_repository import (
-    ContainerMetricRepository,
-)
+from app.application.ports.repository import ContainerMetricRepository
 from app.domain.enums import AggregateInterval, ContainerMetricKind
-from app.domain.models.container_metric import ContainerMetric, ContainerMetricSeries
-from app.domain.models.host_metric import MetricPoint
+from app.domain.models import ContainerMetric, ContainerMetricSeries, MetricPoint
 
 
 class ContainerMetricPersistenceAdapter(
@@ -38,19 +35,6 @@ class ContainerMetricPersistenceAdapter(
         ContainerMetricKind.NET_RX_RATE,
         ContainerMetricKind.NET_TX_RATE,
     )
-
-    async def save_all(self, datapoints: list[ContainerMetric]) -> int:
-        if not datapoints:
-            return 0
-
-        session = self._scoped_session()
-        stmt = (
-            insert(ContainerMetricModel)
-            .values([asdict(datapoint) for datapoint in datapoints])
-            .on_conflict_do_nothing(index_elements=["container_id", "collected_at"])
-        )
-        result = await session.execute(stmt)
-        return result.rowcount
 
     async def aggregate_series(
         self,
@@ -98,3 +82,16 @@ class ContainerMetricPersistenceAdapter(
             )
             for container_id, rows in groupby(result, key=lambda row: row.container_id)
         ]
+
+    async def save_all(self, datapoints: list[ContainerMetric]) -> int:
+        if not datapoints:
+            return 0
+
+        session = self._scoped_session()
+        stmt = (
+            insert(ContainerMetricModel)
+            .values([asdict(datapoint) for datapoint in datapoints])
+            .on_conflict_do_nothing(index_elements=["container_id", "collected_at"])
+        )
+        result = await session.execute(stmt)
+        return result.rowcount  # type: ignore

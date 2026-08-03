@@ -12,7 +12,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.domain.models.user import User, UserRole
+from app.domain.models import User, UserRole
 from app.infrastructure.database import Base
 
 

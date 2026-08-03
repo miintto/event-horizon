@@ -29,3 +29,7 @@ class Container:
     started_at: datetime | None = None
     last_seen_at: datetime | None = None
     created_at: datetime | None = None
+
+    @property
+    def pk(self) -> int:
+        return self.id  # type: ignore

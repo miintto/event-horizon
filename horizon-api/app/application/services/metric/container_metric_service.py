@@ -1,11 +1,7 @@
-from app.application.ports.repository.container_metric_repository import (
-    ContainerMetricRepository,
-)
-from app.application.ports.usecase.container_metric_use_case import (
-    ContainerMetricQuery,
-    ContainerMetricUseCase,
-)
-from app.domain.models.container_metric import ContainerMetricSeries
+from app.application.command.metric import ContainerMetricQuery
+from app.application.ports.repository import ContainerMetricRepository
+from app.application.ports.usecase import ContainerMetricUseCase
+from app.domain.models import ContainerMetricSeries
 from app.infrastructure.transaction import transactional
 
 

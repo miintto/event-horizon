@@ -7,45 +7,28 @@ from sqlalchemy.dialects.postgresql import insert
 
 from app.adapters.outbound.persistence.base import BasePersistenceAdapter
 from app.adapters.outbound.persistence.models.host_metric import HostMetricModel
-from app.application.ports.repository.host_metric_repository import HostMetricRepository
-from app.domain.enums import AggregateInterval, MetricKind
-from app.domain.models.host_metric import (
-    HostMetric,
-    HostMetricSeries,
-    MetricPoint,
-)
+from app.application.ports.repository import HostMetricRepository
+from app.domain.enums import AggregateInterval, HostMetricKind
+from app.domain.models import HostMetric, HostMetricSeries, MetricPoint
 
 
 class HostMetricPersistenceAdapter(BasePersistenceAdapter, HostMetricRepository):
     _COLUMN_MAP = {
-        MetricKind.CPU_USAGE: HostMetricModel.cpu_usage,
-        MetricKind.MEMORY_USED: HostMetricModel.memory_used,
-        MetricKind.MEMORY_TOTAL: HostMetricModel.memory_total,
-        MetricKind.DISK_USED: HostMetricModel.disk_used,
-        MetricKind.DISK_TOTAL: HostMetricModel.disk_total,
-        MetricKind.LOAD_AVG_1: HostMetricModel.load_avg_1,
-        MetricKind.LOAD_AVG_5: HostMetricModel.load_avg_5,
-        MetricKind.LOAD_AVG_15: HostMetricModel.load_avg_15,
-        MetricKind.NET_RX_RATE: HostMetricModel.net_rx,
-        MetricKind.NET_TX_RATE: HostMetricModel.net_tx,
+        HostMetricKind.CPU_USAGE: HostMetricModel.cpu_usage,
+        HostMetricKind.MEMORY_USED: HostMetricModel.memory_used,
+        HostMetricKind.MEMORY_TOTAL: HostMetricModel.memory_total,
+        HostMetricKind.DISK_USED: HostMetricModel.disk_used,
+        HostMetricKind.DISK_TOTAL: HostMetricModel.disk_total,
+        HostMetricKind.LOAD_AVG_1: HostMetricModel.load_avg_1,
+        HostMetricKind.LOAD_AVG_5: HostMetricModel.load_avg_5,
+        HostMetricKind.LOAD_AVG_15: HostMetricModel.load_avg_15,
+        HostMetricKind.NET_RX_RATE: HostMetricModel.net_rx,
+        HostMetricKind.NET_TX_RATE: HostMetricModel.net_tx,
     }
-
-    async def save_all(self, metrics: list[HostMetric]) -> int:
-        if not metrics:
-            return 0
-
-        session = self._scoped_session()
-        stmt = (
-            insert(HostMetricModel)
-            .values([asdict(metric) for metric in metrics])
-            .on_conflict_do_nothing(index_elements=["host_id", "collected_at"])
-        )
-        result = await session.execute(stmt)
-        return result.rowcount
 
     async def aggregate_series(
         self,
-        metric: MetricKind,
+        metric: HostMetricKind,
         host_ids: list[int] | None,
         interval: AggregateInterval,
         start_at: datetime,
@@ -57,7 +40,7 @@ class HostMetricPersistenceAdapter(BasePersistenceAdapter, HostMetricRepository)
         bucket = func.to_timestamp(func.floor(epoch / seconds) * seconds)
 
         column = self._COLUMN_MAP[metric]
-        if metric in (MetricKind.NET_RX_RATE, MetricKind.NET_TX_RATE):
+        if metric in (HostMetricKind.NET_RX_RATE, HostMetricKind.NET_TX_RATE):
             value = cast(func.max(column) - func.min(column), Float) / seconds
         else:
             value = func.avg(column)
@@ -89,3 +72,16 @@ class HostMetricPersistenceAdapter(BasePersistenceAdapter, HostMetricRepository)
             )
             for host_id, rows in groupby(result, key=lambda row: row.host_id)
         ]
+
+    async def save_all(self, datapoints: list[HostMetric]) -> int:
+        if not datapoints:
+            return 0
+
+        session = self._scoped_session()
+        stmt = (
+            insert(HostMetricModel)
+            .values([asdict(datapoint) for datapoint in datapoints])
+            .on_conflict_do_nothing(index_elements=["host_id", "collected_at"])
+        )
+        result = await session.execute(stmt)
+        return result.rowcount  # type: ignore

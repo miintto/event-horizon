@@ -1,28 +1,7 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 
-from app.domain.models.user import User, UserRole
-
-
-@dataclass
-class RegisterCommand:
-    actor_id: int
-    name: str | None
-    email: str
-    password: str
-    role: UserRole = UserRole.MEMBER
-
-
-@dataclass
-class LoginCommand:
-    email: str
-    password: str
-
-
-@dataclass
-class TokenResult:
-    access_token: str
-    expires_in: int
+from app.application.command.auth import LoginCommand, RegisterCommand, TokenResult
+from app.domain.models import User
 
 
 class AuthUseCase(ABC):

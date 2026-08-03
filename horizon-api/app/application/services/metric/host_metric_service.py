@@ -1,9 +1,7 @@
-from app.application.ports.repository.host_metric_repository import HostMetricRepository
-from app.application.ports.usecase.host_metric_use_case import (
-    HostMetricQuery,
-    HostMetricUseCase,
-)
-from app.domain.models.host_metric import HostMetricSeries
+from app.application.command.metric import HostMetricQuery
+from app.application.ports.repository import HostMetricRepository
+from app.application.ports.usecase import HostMetricUseCase
+from app.domain.models import HostMetricSeries
 from app.infrastructure.transaction import transactional
 
 

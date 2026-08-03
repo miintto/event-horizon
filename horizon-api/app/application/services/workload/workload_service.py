@@ -1,21 +1,19 @@
-from app.application.ports.repository.workload_repository import WorkloadRepository
-from app.application.ports.repository.workload_revision_repository import (
-    WorkloadRevisionRepository,
-)
-from app.application.ports.usecase.workload_use_case import (
+from app.application.command.workload import (
     RevisionCreateCommand,
     RevisionDefinition,
     WorkloadCreateCommand,
-    WorkloadResult,
-    WorkloadUseCase,
 )
+from app.application.ports.repository import (
+    WorkloadRepository,
+    WorkloadRevisionRepository,
+)
+from app.application.ports.usecase import WorkloadUseCase
 from app.domain.exceptions import (
     DuplicateWorkloadNameException,
     WorkloadNotFoundException,
     WorkloadRevisionNotFoundException,
 )
-from app.domain.models.workload import Workload
-from app.domain.models.workload_revision import WorkloadRevision
+from app.domain.models import Workload, WorkloadRevision
 from app.infrastructure.transaction import transactional
 
 
@@ -36,7 +34,7 @@ class WorkloadService(WorkloadUseCase):
         return workload
 
     @transactional
-    async def get_workloads(self, host_id: int | None) -> list[WorkloadResult]:
+    async def get_workloads(self, host_id: int | None) -> list[Workload]:
         return await self._workload_repository.find_all_with_counts(host_id)
 
     @transactional
@@ -44,8 +42,8 @@ class WorkloadService(WorkloadUseCase):
         if await self._workload_repository.find_by_name(command.name):
             raise DuplicateWorkloadNameException
         workload = await self._workload_repository.save(Workload(name=command.name))
-        revision = await self._create_revision(workload.id, 1, command.definition)
-        workload.current_revision_id = revision.id
+        revision = await self._create_revision(workload.pk, 1, command.definition)
+        workload.current_revision_id = revision.pk
         return workload
 
     @transactional
@@ -88,6 +86,6 @@ class WorkloadService(WorkloadUseCase):
             )
         )
         await self._workload_repository.update_current_revision_id(
-            workload_id, saved.id
+            workload_id, saved.pk
         )
         return saved

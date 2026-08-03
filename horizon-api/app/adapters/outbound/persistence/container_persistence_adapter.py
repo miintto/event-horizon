@@ -5,8 +5,8 @@ from sqlalchemy.dialects.postgresql import insert
 
 from app.adapters.outbound.persistence.base import BasePersistenceAdapter
 from app.adapters.outbound.persistence.models.container import ContainerModel
-from app.application.ports.repository.container_repository import ContainerRepository
-from app.domain.models.container import Container, ContainerState
+from app.application.ports.repository import ContainerRepository
+from app.domain.models import Container, ContainerState
 
 
 class ContainerPersistenceAdapter(BasePersistenceAdapter, ContainerRepository):
@@ -114,4 +114,4 @@ class ContainerPersistenceAdapter(BasePersistenceAdapter, ContainerRepository):
             .values(state=ContainerState.EXITED)
         )
         result = await session.execute(stmt)
-        return result.rowcount
+        return result.rowcount  # type: ignore

@@ -17,3 +17,7 @@ class Host:
     status: HostStatus = HostStatus.OFFLINE
     last_seen_at: datetime | None = None
     created_at: datetime | None = None
+
+    @property
+    def pk(self) -> int:
+        return self.id  # type: ignore

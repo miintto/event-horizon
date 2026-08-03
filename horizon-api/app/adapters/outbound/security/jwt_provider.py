@@ -2,11 +2,11 @@ from datetime import UTC, datetime, timedelta
 
 from jwt import PyJWTError, decode, encode
 
-from app.application.ports.security.token_issuer import TokenIssuer
+from app.application.ports.security import TokenProvider
 from app.domain.exceptions import UnauthorizedException
 
 
-class JwtTokenIssuer(TokenIssuer):
+class JwtProvider(TokenProvider):
     def __init__(self, secret_key: str, algorithm: str, expire_secs: int):
         self._secret_key = secret_key
         self._algorithm = algorithm

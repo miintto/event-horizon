@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 
 from app.adapters.inbound.api.dependencies import get_host_service
 from app.adapters.inbound.api.schemas.host import HostResponse
-from app.application.ports.usecase.host_use_case import HostUseCase
+from app.application.ports.usecase import HostUseCase
 
 router = APIRouter(prefix="/hosts", tags=["host"])
 
@@ -12,10 +12,10 @@ router = APIRouter(prefix="/hosts", tags=["host"])
     response_model=list[HostResponse],
     response_model_exclude_none=True,
 )
-async def list_hosts(
+async def get_hosts(
     service: HostUseCase = Depends(get_host_service),
 ):
-    hosts = await service.list_hosts()
+    hosts = await service.get_hosts()
     return [HostResponse.from_domain(host) for host in hosts]
 
 

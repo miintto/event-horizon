@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from app.domain.models.container import Container
+from app.domain.models import Container
 
 
 class ContainerUseCase(ABC):

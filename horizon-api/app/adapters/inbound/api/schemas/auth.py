@@ -2,12 +2,8 @@ from typing import Self
 
 from pydantic import BaseModel, EmailStr, Field, model_validator
 
-from app.application.ports.usecase.auth_use_case import (
-    LoginCommand,
-    RegisterCommand,
-    TokenResult,
-)
-from app.domain.models.user import UserRole
+from app.application.command.auth import LoginCommand, RegisterCommand, TokenResult
+from app.domain.models import UserRole
 
 
 class RegisterRequest(BaseModel):

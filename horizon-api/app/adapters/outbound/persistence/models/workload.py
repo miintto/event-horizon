@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import DateTime, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.domain.models.workload import Workload
+from app.domain.models import Workload
 from app.infrastructure.database import Base
 
 

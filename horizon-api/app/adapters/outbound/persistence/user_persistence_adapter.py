@@ -2,8 +2,8 @@ from sqlalchemy import select
 
 from app.adapters.outbound.persistence.base import BasePersistenceAdapter
 from app.adapters.outbound.persistence.models.user import UserModel
-from app.application.ports.repository.user_repository import UserRepository
-from app.domain.models.user import User
+from app.application.ports.repository import UserRepository
+from app.domain.models import User
 
 
 class UserPersistenceAdapter(BasePersistenceAdapter, UserRepository):

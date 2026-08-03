@@ -4,14 +4,12 @@ from typing import Self
 
 from pydantic import BaseModel, Field, model_validator
 
-from app.application.ports.usecase.workload_use_case import (
+from app.application.command.workload import (
     RevisionCreateCommand,
     RevisionDefinition,
     WorkloadCreateCommand,
-    WorkloadResult,
 )
-from app.domain.models.workload import Workload
-from app.domain.models.workload_revision import (
+from app.domain.models import (
     ContainerSpec,
     EnvVar,
     Healthcheck,
@@ -21,6 +19,7 @@ from app.domain.models.workload_revision import (
     PortBinding,
     RestartPolicy,
     SecretRef,
+    Workload,
     WorkloadRevision,
 )
 
@@ -36,9 +35,9 @@ class SecretRefRequest(BaseModel):
 
 
 class PortBindingRequest(BaseModel):
-    container_port: int = Field(ge=1, le=65535)
-    host_port: int | None = Field(default=None, ge=1, le=65535)
     protocol: str = "tcp"
+    host_port: int | None = Field(default=None, ge=1, le=65535)
+    container_port: int = Field(ge=1, le=65535)
 
 
 class MountRequest(BaseModel):
@@ -70,7 +69,7 @@ class LogConfigRequest(BaseModel):
     options: dict[str, str] = Field(default_factory=dict)
 
 
-class ContainerSpecRequest(BaseModel):
+class BaseContainerSpec(BaseModel):
     command: list[str] | None = None
     entrypoint: list[str] | None = None
     env: list[EnvVarRequest] = Field(default_factory=list)
@@ -83,6 +82,8 @@ class ContainerSpecRequest(BaseModel):
     network: NetworkRequest | None = None
     log: LogConfigRequest | None = None
 
+
+class ContainerSpecRequest(BaseContainerSpec):
     @model_validator(mode="after")
     def validate_env_names(self) -> Self:
         names = [e.name for e in self.env] + [s.name for s in self.secrets]
@@ -154,23 +155,20 @@ class WorkloadResponse(BaseModel):
 
     @classmethod
     def from_domain(cls, workload: Workload) -> WorkloadResponse:
+        detail = workload.detail
         return cls(
-            id=workload.id,
+            id=workload.pk,
             name=workload.name,
             current_revision_id=workload.current_revision_id,
+            container_count=detail.container_count if detail else None,
+            running_count=detail.running_count if detail else None,
+            host_count=detail.host_count if detail else None,
             created_at=workload.created_at,
         )
 
-    @classmethod
-    def from_result(cls, result: WorkloadResult) -> WorkloadResponse:
-        return cls(
-            id=result.id,
-            name=result.name,
-            container_count=result.container_count,
-            running_count=result.running_count,
-            host_count=result.host_count,
-            created_at=result.created_at,
-        )
+
+class ContainerSpecResponse(BaseContainerSpec):
+    pass
 
 
 class WorkloadRevisionResponse(BaseModel):
@@ -180,19 +178,19 @@ class WorkloadRevisionResponse(BaseModel):
     image: str
     cpu_limit: Decimal | None = None
     memory_limit: int | None = None
-    spec: ContainerSpecRequest
+    spec: ContainerSpecResponse
     created_at: datetime | None = None
 
     @classmethod
     def from_domain(cls, revision: WorkloadRevision) -> WorkloadRevisionResponse:
         return cls(
-            id=revision.id,
+            id=revision.pk,
             workload_id=revision.workload_id,
             revision=revision.revision,
             image=revision.image,
             cpu_limit=revision.cpu_limit,
             memory_limit=revision.memory_limit,
-            spec=ContainerSpecRequest.model_validate(
+            spec=ContainerSpecResponse.model_validate(
                 revision.spec, from_attributes=True
             ),
             created_at=revision.created_at,

@@ -6,8 +6,8 @@ from sqlalchemy.dialects.postgresql import insert
 
 from app.adapters.outbound.persistence.base import BasePersistenceAdapter
 from app.adapters.outbound.persistence.models.host import HostModel
-from app.application.ports.repository.host_repository import HostRepository
-from app.domain.models.host import Host, HostStatus
+from app.application.ports.repository import HostRepository
+from app.domain.models import Host, HostStatus
 
 
 class HostPersistenceAdapter(BasePersistenceAdapter, HostRepository):

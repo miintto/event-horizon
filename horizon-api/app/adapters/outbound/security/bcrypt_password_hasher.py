@@ -1,6 +1,6 @@
 from bcrypt import checkpw, gensalt, hashpw
 
-from app.application.ports.security.password_hasher import PasswordHasher
+from app.application.ports.security import PasswordHasher
 
 
 class BcryptPasswordHasher(PasswordHasher):

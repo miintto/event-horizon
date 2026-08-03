@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from app.domain.models.workload_revision import WorkloadRevision
+from app.domain.models import WorkloadRevision
 
 
 class WorkloadRevisionRepository(ABC):

@@ -3,10 +3,8 @@ from sqlalchemy import func, select, update
 from app.adapters.outbound.persistence.base import BasePersistenceAdapter
 from app.adapters.outbound.persistence.models.container import ContainerModel
 from app.adapters.outbound.persistence.models.workload import WorkloadModel
-from app.application.ports.repository.workload_repository import WorkloadRepository
-from app.application.ports.usecase.workload_use_case import WorkloadResult
-from app.domain.models.container import ContainerState
-from app.domain.models.workload import Workload
+from app.application.ports.repository import WorkloadRepository
+from app.domain.models import ContainerState, Workload, WorkloadDetail
 
 
 class WorkloadPersistenceAdapter(BasePersistenceAdapter, WorkloadRepository):
@@ -26,7 +24,7 @@ class WorkloadPersistenceAdapter(BasePersistenceAdapter, WorkloadRepository):
         model = result.scalar_one_or_none()
         return model.to_domain() if model else None
 
-    async def find_all_with_counts(self, host_id: int | None) -> list[WorkloadResult]:
+    async def find_all_with_counts(self, host_id: int | None) -> list[Workload]:
         session = self._scoped_session()
         join_condition = ContainerModel.workload_id == WorkloadModel.id
         if host_id is not None:
@@ -41,33 +39,27 @@ class WorkloadPersistenceAdapter(BasePersistenceAdapter, WorkloadRepository):
                 .label("running_count"),
                 func.count(func.distinct(ContainerModel.host_id)).label("host_count"),
             )
-            # 인스턴스가 아직 없는 정의도 목록에 나와야 하므로 outer join
             .outerjoin(ContainerModel, join_condition)
             .group_by(WorkloadModel.id)
             .order_by(WorkloadModel.id)
         )
         if host_id is not None:
-            # host 필터를 준 경우엔 그 host 에 인스턴스가 있는 workload 만
             stmt = stmt.having(func.count(ContainerModel.id) > 0)
         result = await session.execute(stmt)
         return [
-            WorkloadResult(
+            Workload(
                 id=model.id,
                 name=model.name,
-                container_count=container_count,
-                running_count=running_count,
-                host_count=host_count,
+                current_revision_id=model.current_revision_id,
                 created_at=model.created_at,
+                detail=WorkloadDetail(
+                    container_count=container_count,
+                    running_count=running_count,
+                    host_count=host_count,
+                ),
             )
             for model, container_count, running_count, host_count in result.all()
         ]
-
-    async def save(self, workload: Workload) -> Workload:
-        session = self._scoped_session()
-        model = WorkloadModel(name=workload.name)
-        session.add(model)
-        await session.flush()
-        return model.to_domain()
 
     async def update_current_revision_id(
         self, workload_id: int, revision_id: int
@@ -78,3 +70,10 @@ class WorkloadPersistenceAdapter(BasePersistenceAdapter, WorkloadRepository):
             .where(WorkloadModel.id == workload_id)
             .values(current_revision_id=revision_id)
         )
+
+    async def save(self, workload: Workload) -> Workload:
+        session = self._scoped_session()
+        model = WorkloadModel(name=workload.name)
+        session.add(model)
+        await session.flush()
+        return model.to_domain()
