@@ -51,3 +51,18 @@ class WorkloadRevisionNotFoundException(APIException):
 class DuplicateWorkloadNameException(APIException):
     status_code = 409
     detail = "Workload name already exists"
+
+
+class SecretNotFoundException(APIException):
+    status_code = 404
+    detail = "Secret not found"
+
+
+class DuplicateSecretNameException(APIException):
+    status_code = 409
+    detail = "Secret name already exists"
+
+
+class SecretDecryptionException(APIException):
+    status_code = 500
+    detail = "Failed to decrypt secret"

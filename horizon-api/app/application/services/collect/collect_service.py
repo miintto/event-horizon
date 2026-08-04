@@ -45,7 +45,7 @@ class CollectService(CollectUseCase):
         )
 
     @transactional
-    async def post_collect(self, host_id: int) -> None:
+    async def post_collect(self, host_id: int):
         await self._container_repository.update_state_to_exited(
             host_id,
             datetime.now(UTC) - timedelta(seconds=self._stale_after_secs),

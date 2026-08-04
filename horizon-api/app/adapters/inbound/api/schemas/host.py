@@ -16,7 +16,7 @@ class HostResponse(BaseModel):
 
     @classmethod
     def from_domain(cls, host: Host) -> HostResponse:
-        return cls(
+        return cls.model_construct(
             id=host.pk,
             agent_uuid=host.agent_uuid,
             hostname=host.hostname,

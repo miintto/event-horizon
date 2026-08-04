@@ -3,6 +3,7 @@ from .container_metric import ContainerMetric
 from .host import Host, HostStatus
 from .host_metric import HostMetric
 from .metric import ContainerMetricSeries, HostMetricSeries, MetricPoint
+from .secret import Secret
 from .user import User, UserRole
 from .workload import Workload, WorkloadDetail
 from .workload_revision import (
@@ -36,6 +37,7 @@ __all__ = [
     "Network",
     "PortBinding",
     "RestartPolicy",
+    "Secret",
     "SecretRef",
     "User",
     "UserRole",

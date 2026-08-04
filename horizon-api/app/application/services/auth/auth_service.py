@@ -4,7 +4,6 @@ from app.application.ports.security import PasswordHasher, TokenProvider
 from app.application.ports.usecase import AuthUseCase
 from app.domain.exceptions import (
     DuplicateEmailException,
-    ForbiddenException,
     InactiveUserException,
     InvalidCredentialsException,
 )
@@ -27,10 +26,6 @@ class AuthService(AuthUseCase):
 
     @transactional
     async def register(self, command: RegisterCommand) -> TokenResult:
-        actor = await self._user_repository.find_by_id(command.actor_id)
-        if not actor or not actor.is_active or actor.role is not UserRole.ADMIN:
-            raise ForbiddenException
-
         user = await self._create_user(
             name=command.name,
             email=command.email,
@@ -77,6 +72,6 @@ class AuthService(AuthUseCase):
 
     def _issue(self, user: User) -> TokenResult:
         return TokenResult(
-            access_token=self._token_provider.issue(user.pk),
+            access_token=self._token_provider.encode(user.pk, user.role),
             expires_in=self._expire_secs,
         )

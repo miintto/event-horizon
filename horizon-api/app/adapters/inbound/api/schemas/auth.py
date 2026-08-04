@@ -19,9 +19,8 @@ class RegisterRequest(BaseModel):
             raise ValueError("`password_check` does not match password")
         return self
 
-    def to_command(self, actor_id: int) -> RegisterCommand:
+    def to_command(self) -> RegisterCommand:
         return RegisterCommand(
-            actor_id=actor_id,
             name=self.name,
             email=self.email,
             password=self.password,
@@ -44,7 +43,7 @@ class TokenResponse(BaseModel):
 
     @classmethod
     def from_result(cls, result: TokenResult) -> TokenResponse:
-        return cls(
+        return cls.model_construct(
             access_token=result.access_token,
             expires_in=result.expires_in,
         )

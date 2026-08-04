@@ -156,7 +156,7 @@ class WorkloadResponse(BaseModel):
     @classmethod
     def from_domain(cls, workload: Workload) -> WorkloadResponse:
         detail = workload.detail
-        return cls(
+        return cls.model_construct(
             id=workload.pk,
             name=workload.name,
             current_revision_id=workload.current_revision_id,
@@ -183,7 +183,7 @@ class WorkloadRevisionResponse(BaseModel):
 
     @classmethod
     def from_domain(cls, revision: WorkloadRevision) -> WorkloadRevisionResponse:
-        return cls(
+        return cls.model_construct(
             id=revision.pk,
             workload_id=revision.workload_id,
             revision=revision.revision,

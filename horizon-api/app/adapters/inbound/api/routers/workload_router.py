@@ -57,7 +57,7 @@ async def get_workload(
     response_model=list[WorkloadRevisionResponse],
     response_model_exclude_none=True,
 )
-async def list_revisions(
+async def get_revisions(
     workload_id: int,
     service: WorkloadUseCase = Depends(get_workload_service),
 ):

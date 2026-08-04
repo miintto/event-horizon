@@ -10,6 +10,9 @@ from app.adapters.outbound.persistence.host_metric_persistence_adapter import (
 from app.adapters.outbound.persistence.host_persistence_adapter import (
     HostPersistenceAdapter,
 )
+from app.adapters.outbound.persistence.secret_persistence_adapter import (
+    SecretPersistenceAdapter,
+)
 from app.adapters.outbound.persistence.user_persistence_adapter import (
     UserPersistenceAdapter,
 )
@@ -20,6 +23,7 @@ from app.adapters.outbound.persistence.workload_revision_persistence_adapter imp
     WorkloadRevisionPersistenceAdapter,
 )
 from app.adapters.outbound.security.bcrypt_password_hasher import BcryptPasswordHasher
+from app.adapters.outbound.security.fernet_cipher import FernetCipher
 from app.adapters.outbound.security.jwt_provider import JwtProvider
 from app.application.ports.security import TokenProvider
 from app.application.ports.usecase import (
@@ -29,6 +33,7 @@ from app.application.ports.usecase import (
     ContainerUseCase,
     HostMetricUseCase,
     HostUseCase,
+    SecretUseCase,
     WorkloadUseCase,
 )
 from app.application.services.auth.auth_service import AuthService
@@ -39,6 +44,7 @@ from app.application.services.metric.container_metric_service import (
     ContainerMetricService,
 )
 from app.application.services.metric.host_metric_service import HostMetricService
+from app.application.services.secret.secret_service import SecretService
 from app.application.services.workload.workload_service import WorkloadService
 from app.infrastructure.config import settings
 
@@ -47,12 +53,17 @@ _container_metric_repository = ContainerMetricPersistenceAdapter()
 _container_repository = ContainerPersistenceAdapter()
 _host_metric_repository = HostMetricPersistenceAdapter()
 _host_repository = HostPersistenceAdapter()
+_secret_repository = SecretPersistenceAdapter()
 _user_repository = UserPersistenceAdapter()
 _workload_repository = WorkloadPersistenceAdapter()
 _workload_revision_repository = WorkloadRevisionPersistenceAdapter()
 
 # Security
 _password_hasher = BcryptPasswordHasher()
+_secret_cipher = FernetCipher(
+    key=settings.secret_encryption_key,
+    previous_key=settings.secret_encryption_key_previous,
+)
 _token_provider = JwtProvider(
     secret_key=settings.jwt_secret_key,
     algorithm=settings.jwt_algorithm,
@@ -84,6 +95,10 @@ _host_metric_service = HostMetricService(
 )
 _host_service = HostService(
     host_repository=_host_repository,
+)
+_secret_service = SecretService(
+    secret_repository=_secret_repository,
+    secret_cipher=_secret_cipher,
 )
 _workload_service = WorkloadService(
     workload_repository=_workload_repository,
@@ -117,6 +132,10 @@ async def get_host_metric_service() -> HostMetricUseCase:
 
 async def get_host_service() -> HostUseCase:
     return _host_service
+
+
+async def get_secret_service() -> SecretUseCase:
+    return _secret_service
 
 
 async def get_workload_service() -> WorkloadUseCase:

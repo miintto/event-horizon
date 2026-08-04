@@ -2,8 +2,9 @@ from datetime import UTC, datetime, timedelta
 
 from jwt import PyJWTError, decode, encode
 
-from app.application.ports.security import TokenProvider
+from app.application.ports.security import TokenClaims, TokenProvider
 from app.domain.exceptions import UnauthorizedException
+from app.domain.models import UserRole
 
 
 class JwtProvider(TokenProvider):
@@ -12,11 +13,12 @@ class JwtProvider(TokenProvider):
         self._algorithm = algorithm
         self._expire_secs = expire_secs
 
-    def issue(self, user_id: int) -> str:
+    def encode(self, user_id: int, role: UserRole) -> str:
         now = datetime.now(UTC)
         return encode(
             {
                 "sub": str(user_id),
+                "role": role.value,
                 "iat": now,
                 "exp": now + timedelta(seconds=self._expire_secs),
             },
@@ -24,9 +26,12 @@ class JwtProvider(TokenProvider):
             algorithm=self._algorithm,
         )
 
-    def resolve(self, token: str) -> int:
+    def decode(self, token: str) -> TokenClaims:
         try:
             payload = decode(token, self._secret_key, algorithms=[self._algorithm])
-            return int(payload["sub"])
+            return TokenClaims(
+                user_id=int(payload["sub"]),
+                role=UserRole(payload["role"]),
+            )
         except PyJWTError, KeyError, TypeError, ValueError:
             raise UnauthorizedException

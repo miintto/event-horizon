@@ -5,7 +5,6 @@ from app.domain.models import UserRole
 
 @dataclass
 class RegisterCommand:
-    actor_id: int
     name: str | None
     email: str
     password: str

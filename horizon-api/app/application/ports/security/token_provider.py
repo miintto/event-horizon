@@ -1,9 +1,18 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
+
+from app.domain.models import UserRole
+
+
+@dataclass(frozen=True, kw_only=True)
+class TokenClaims:
+    user_id: int
+    role: UserRole
 
 
 class TokenProvider(ABC):
     @abstractmethod
-    def issue(self, user_id: int) -> str: ...
+    def encode(self, user_id: int, role: UserRole) -> str: ...
 
     @abstractmethod
-    def resolve(self, token: str) -> int: ...
+    def decode(self, token: str) -> TokenClaims: ...

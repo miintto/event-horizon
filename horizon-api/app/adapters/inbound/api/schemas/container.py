@@ -22,7 +22,7 @@ class ContainerResponse(BaseModel):
 
     @classmethod
     def from_domain(cls, container: Container) -> ContainerResponse:
-        return cls(
+        return cls.model_construct(
             id=container.pk,
             host_id=container.host_id,
             workload_id=container.workload_id,

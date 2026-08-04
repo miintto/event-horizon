@@ -61,9 +61,7 @@ class WorkloadPersistenceAdapter(BasePersistenceAdapter, WorkloadRepository):
             for model, container_count, running_count, host_count in result.all()
         ]
 
-    async def update_current_revision_id(
-        self, workload_id: int, revision_id: int
-    ) -> None:
+    async def update_current_revision_id(self, workload_id: int, revision_id: int):
         session = self._scoped_session()
         await session.execute(
             update(WorkloadModel)

@@ -10,7 +10,10 @@ class Settings(BaseSettings):
 
     jwt_secret_key: str
     jwt_algorithm: str = "HS256"
-    jwt_expire_secs: int = 60 * 60 * 24 * 7
+    jwt_expire_secs: int = 60 * 60 * 24
+
+    secret_encryption_key: str
+    secret_encryption_key_previous: str = ""
 
     db_host: str
     db_port: int = 5432
