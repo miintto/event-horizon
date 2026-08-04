@@ -75,6 +75,17 @@ export function rangeWindow(range: RangeKey): {
   return { startAt: startAt.toISOString(), endAt: endAt.toISOString() };
 }
 
+export const SERIES_COLORS = [
+  "var(--viz-series-1)",
+  "var(--viz-series-2)",
+  "var(--viz-series-3)",
+  "var(--viz-series-4)",
+  "var(--viz-series-5)",
+  "var(--viz-series-6)",
+  "var(--viz-series-7)",
+  "var(--viz-series-8)",
+];
+
 export interface ChartDef<K extends string = MetricKind> {
   title: string;
   format: MetricFormat;
@@ -135,11 +146,29 @@ export const CONTAINER_CHARTS: ChartDef<ContainerMetricKind>[] = [
     format: "bytes",
     series: [
       { label: "used", kind: "memory_used", colorVar: "var(--viz-series-1)" },
-      { label: "limit", kind: "memory_limit", colorVar: "var(--viz-series-2)" },
+      {
+        label: "limit",
+        kind: "memory_limit",
+        colorVar: "var(--viz-threshold)",
+      },
     ],
   },
   {
-    title: "Block I/O",
+    title: "Network RX",
+    format: "rate",
+    series: [
+      { label: "rx", kind: "net_rx_rate", colorVar: "var(--viz-series-1)" },
+    ],
+  },
+  {
+    title: "Network TX",
+    format: "rate",
+    series: [
+      { label: "tx", kind: "net_tx_rate", colorVar: "var(--viz-series-1)" },
+    ],
+  },
+  {
+    title: "Block Read",
     format: "rate",
     series: [
       {
@@ -147,19 +176,17 @@ export const CONTAINER_CHARTS: ChartDef<ContainerMetricKind>[] = [
         kind: "block_read_rate",
         colorVar: "var(--viz-series-1)",
       },
-      {
-        label: "write",
-        kind: "block_write_rate",
-        colorVar: "var(--viz-series-2)",
-      },
     ],
   },
   {
-    title: "Network",
+    title: "Block Write",
     format: "rate",
     series: [
-      { label: "rx", kind: "net_rx_rate", colorVar: "var(--viz-series-1)" },
-      { label: "tx", kind: "net_tx_rate", colorVar: "var(--viz-series-2)" },
+      {
+        label: "write",
+        kind: "block_write_rate",
+        colorVar: "var(--viz-series-1)",
+      },
     ],
   },
   {

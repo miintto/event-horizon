@@ -10,6 +10,15 @@ export interface ChartSeries {
   points: { bucket: string; value?: number }[];
 }
 
+export function SeriesSwatch({ colorVar }: { colorVar: string }) {
+  return (
+    <span
+      className="inline-block h-0.5 w-3 shrink-0 rounded-full"
+      style={{ background: colorVar }}
+    />
+  );
+}
+
 interface LineChartProps {
   series: ChartSeries[];
   format: MetricFormat;
@@ -287,10 +296,7 @@ function Tooltip({
       <div className="flex flex-col gap-0.5">
         {rows.map((r) => (
           <div key={r.label} className="flex items-center gap-2">
-            <span
-              className="inline-block h-2 w-2 rounded-sm"
-              style={{ background: r.colorVar }}
-            />
+            <SeriesSwatch colorVar={r.colorVar} />
             <span className="text-neutral-400">{r.label}</span>
             <span
               className="ml-auto font-medium text-neutral-100"

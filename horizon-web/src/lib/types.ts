@@ -1,3 +1,9 @@
+export interface TokenResponse {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+}
+
 export type HostStatus = "online" | "offline";
 
 export interface Host {
@@ -74,11 +80,48 @@ export interface ContainerMetricSeries {
   points: MetricPoint[];
 }
 
+/** 정의 본문. 서버가 JSONB 로 보관하며 형태 검증만 한다 */
+export type ContainerSpec = Record<string, unknown>;
+
+export interface WorkloadRevision {
+  id: number;
+  workload_id: number;
+  revision: number;
+  image: string;
+  cpu_limit?: string;
+  memory_limit?: number;
+  spec: ContainerSpec;
+  created_at?: string;
+}
+
+export interface RevisionDefinitionInput {
+  image: string;
+  cpu_limit?: number;
+  memory_limit?: number;
+  spec?: ContainerSpec;
+}
+
 export interface Workload {
   id: number;
   name: string;
+  current_revision_id?: number;
   container_count?: number;
   running_count?: number;
   host_count?: number;
   created_at?: string;
 }
+
+/** 값(평문·암호문)은 어떤 응답에도 실리지 않는다 */
+export interface Secret {
+  id: number;
+  name: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface SecretListResponse {
+  secrets: Secret[];
+}
+
+export const SECRET_VALUE_MAX = 4096;
+export const SECRET_NAME_MAX = 255;

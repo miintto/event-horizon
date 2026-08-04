@@ -1,4 +1,8 @@
-import { LineChart, type ChartSeries } from "@/components/LineChart";
+import {
+  LineChart,
+  SeriesSwatch,
+  type ChartSeries,
+} from "@/components/LineChart";
 import { formatMetric, type MetricFormat } from "@/lib/format";
 
 export interface MetricCardProps {
@@ -15,7 +19,8 @@ function latestValue(points: { value?: number }[]): number | undefined {
 }
 
 export function MetricCard({ title, format, series }: MetricCardProps) {
-  const single = series.length === 1;
+  const visible = series.filter((s) => s.points.some((p) => p.value != null));
+  const single = visible.length === 1;
 
   return (
     <div className="viz rounded-lg border border-neutral-800 bg-neutral-900 p-3">
@@ -26,21 +31,18 @@ export function MetricCard({ title, format, series }: MetricCardProps) {
             className="text-xl font-semibold text-neutral-100"
             style={{ fontVariantNumeric: "tabular-nums" }}
           >
-            {formatLatest(format, series[0].points)}
+            {formatLatest(format, visible[0].points)}
           </span>
         )}
       </div>
 
-      <LineChart series={series} format={format} />
+      <LineChart series={visible} format={format} />
 
       {!single && (
         <div className="mt-2 flex flex-wrap justify-end gap-x-4 gap-y-1">
-          {series.map((s) => (
+          {visible.map((s) => (
             <span key={s.label} className="flex items-center gap-1.5 text-xs">
-              <span
-                className="inline-block h-2 w-2 rounded-sm"
-                style={{ background: s.colorVar }}
-              />
+              <SeriesSwatch colorVar={s.colorVar} />
               <span className="text-neutral-400">{s.label}</span>
               <span
                 className="font-medium text-neutral-100"

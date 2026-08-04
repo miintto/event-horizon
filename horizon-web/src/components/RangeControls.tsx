@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import { RefreshIcon } from "@/components/Icons";
 import {
   finestIntervalFor,
   INTERVAL_OPTIONS,
@@ -89,25 +90,5 @@ export function RangeControls({
         <RefreshIcon spinning={busy} />
       </button>
     </div>
-  );
-}
-
-function RefreshIcon({ spinning }: { spinning: boolean }) {
-  return (
-    <svg
-      className={spinning ? "animate-spin" : ""}
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M21 12a9 9 0 1 1-2.64-6.36" />
-      <path d="M21 3v6h-6" />
-    </svg>
   );
 }

@@ -4,11 +4,13 @@
   color-scheme: dark;
   --background: #0a0a0a;
   --foreground: #ededed;
+  --accent: #efa83d;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -23,9 +25,10 @@ body {
   --viz-surface: #171717;
   --viz-grid: #262626;
   --viz-baseline: #404040;
+  --viz-threshold: #c96033;
   --viz-ink: #ededed;
   --viz-muted: #8b8b8b;
-  --viz-series-1: #efa83d;
+  --viz-series-1: var(--accent);
   --viz-series-2: #4ad1b8;
   --viz-series-3: #f07eaa;
   --viz-series-4: #6ea8fe;
