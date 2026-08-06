@@ -1,13 +1,19 @@
+use std::sync::Arc;
 use std::time::Duration;
 
+use bollard::Docker;
+use tokio::task::JoinHandle;
 use tokio::time::{MissedTickBehavior, interval};
 
-use crate::buffer::RingBuffer;
+use crate::collect::buffer::RingBuffer;
+use crate::collect::container::{self, ContainerCollector, ContainerObservation};
+use crate::collect::host::{HostCollector, HostMetricDatapoint};
+use crate::collect::shipper::{SendOutcome, Shipper};
 use crate::config::Config;
-use crate::host_collector::{HostCollector, HostMetricDatapoint};
-use crate::container_collector::{self, ContainerCollector, ContainerObservation};
-use crate::shipper::{SendOutcome, Shipper};
+use crate::deploy::control::Control;
+use crate::deploy::executor::{self, Outcome, Timeouts};
 
+#[allow(clippy::too_many_arguments)]
 pub async fn run(
     config: &Config,
     mut collector: HostCollector,
@@ -15,6 +21,7 @@ pub async fn run(
     mut buffer: RingBuffer<HostMetricDatapoint>,
     mut container_buffer: RingBuffer<ContainerObservation>,
     shipper: Shipper,
+    deploy: Option<(Arc<Control>, Docker)>,
     shutdown: impl std::future::Future<Output = ()>,
 ) {
     let mut collect_tick = interval(Duration::from_secs(config.collect_interval_secs));
@@ -23,6 +30,11 @@ pub async fn run(
     let mut send_tick = interval(Duration::from_secs(config.send_interval_secs));
     send_tick.set_missed_tick_behavior(MissedTickBehavior::Skip);
     send_tick.reset();
+
+    let mut deploy_tick = interval(Duration::from_secs(config.deploy_poll_interval_secs));
+    deploy_tick.set_missed_tick_behavior(MissedTickBehavior::Skip);
+    let mut deploy_task: Option<JoinHandle<()>> = None;
+    let timeouts = Timeouts::from(config);
 
     tracing::info!("agent started");
     tokio::pin!(shutdown);
@@ -38,6 +50,12 @@ pub async fn run(
             _ = send_tick.tick() => {
                 flush(&mut buffer, &mut container_buffer, &shipper).await;
             }
+            _ = deploy_tick.tick(), if deploy.is_some() => {
+                if deploy_task.as_ref().is_none_or(|task| task.is_finished()) {
+                    let (control, docker) = deploy.clone().expect("guarded by deploy.is_some()");
+                    deploy_task = Some(tokio::spawn(deploy_once(control, docker, timeouts)));
+                }
+            }
             _ = &mut shutdown => {
                 break;
             }
@@ -46,6 +64,48 @@ pub async fn run(
 
     flush(&mut buffer, &mut container_buffer, &shipper).await;
     tracing::info!("agent stopped");
+}
+
+async fn deploy_once(control: Arc<Control>, docker: Docker, timeouts: Timeouts) {
+    let job = match control.claim().await {
+        Ok(Some(job)) => job,
+        Ok(None) => return,
+        Err(err) => {
+            tracing::warn!("deployment claim failed: {err}");
+            return;
+        }
+    };
+
+    tracing::info!(
+        "deploying {} (deployment {})",
+        job.container_name,
+        job.deployment_id
+    );
+    let outcome = executor::deploy(&docker, &job, timeouts).await;
+
+    let (docker_id, removed, error_message) = match &outcome {
+        Outcome::Succeeded { docker_id, removed } => {
+            tracing::info!("deployment {} succeeded", job.deployment_id);
+            (Some(docker_id.as_str()), removed.as_slice(), None)
+        }
+        Outcome::Failed { error_message } => {
+            tracing::error!("deployment {} failed: {error_message}", job.deployment_id);
+            (None, [].as_slice(), Some(error_message.as_str()))
+        }
+    };
+
+    if let Err(err) = control
+        .report(
+            job.deployment_id,
+            outcome.status(),
+            docker_id,
+            removed,
+            error_message,
+        )
+        .await
+    {
+        tracing::error!("deployment {} report failed: {err}", job.deployment_id);
+    }
 }
 
 async fn flush(
@@ -59,7 +119,7 @@ async fn flush(
         return;
     }
 
-    let containers = container_collector::group(observations.clone());
+    let containers = container::group(observations.clone());
 
     match shipper.send(&datapoints, &containers).await {
         SendOutcome::Delivered => {

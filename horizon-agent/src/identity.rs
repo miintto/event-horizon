@@ -13,8 +13,9 @@ pub fn load_or_create_agent_uuid(path: &Path) -> Result<Uuid> {
     }
 
     if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)
-            .with_context(|| format!("failed to create agent id directory: {}", parent.display()))?;
+        std::fs::create_dir_all(parent).with_context(|| {
+            format!("failed to create agent id directory: {}", parent.display())
+        })?;
     }
 
     let agent_uuid = Uuid::new_v4();

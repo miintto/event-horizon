@@ -5,9 +5,9 @@ use reqwest::Client;
 use serde::Serialize;
 use uuid::Uuid;
 
+use crate::collect::container::ContainerCollectItem;
+use crate::collect::host::HostMetricDatapoint;
 use crate::config::Config;
-use crate::container_collector::ContainerCollectItem;
-use crate::host_collector::HostMetricDatapoint;
 
 #[derive(Serialize)]
 struct MetricBatch<'a> {
@@ -40,7 +40,7 @@ impl Shipper {
             .context("Failed to build HTTP client")?;
 
         let url = format!(
-            "{}/api/metrics/hosts",
+            "{}/api/agents/metrics",
             config.server_url.trim_end_matches('/')
         );
 

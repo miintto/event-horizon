@@ -1,20 +1,22 @@
-mod buffer;
+mod collect;
 mod config;
-mod host_collector;
-mod container_collector;
+mod deploy;
 mod identity;
 mod runner;
-mod shipper;
 
-use anyhow::Result;
+use std::sync::Arc;
+
+use anyhow::{Context, Result};
+use bollard::Docker;
 use sysinfo::System;
 use tracing_subscriber::EnvFilter;
 
-use crate::buffer::RingBuffer;
-use crate::host_collector::HostCollector;
+use crate::collect::buffer::RingBuffer;
+use crate::collect::container::ContainerCollector;
+use crate::collect::host::HostCollector;
+use crate::collect::shipper::Shipper;
 use crate::config::Config;
-use crate::container_collector::ContainerCollector;
-use crate::shipper::Shipper;
+use crate::deploy::control::Control;
 
 fn config_path() -> String {
     std::env::args()
@@ -26,7 +28,9 @@ fn config_path() -> String {
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")))
+        .with_env_filter(
+            EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")),
+        )
         .init();
 
     let config = Config::load(&config_path())?;
@@ -43,6 +47,20 @@ async fn main() -> Result<()> {
     };
     let shipper = Shipper::new(&config, agent_uuid, hostname)?;
 
+    let deploy = if config.deploy_enabled {
+        let docker = Docker::connect_with_local_defaults()
+            .context("Failed to connect to Docker for deployments")?;
+        let control = Arc::new(Control::new(&config, agent_uuid)?);
+        tracing::info!(
+            "deployments enabled (polling every {}s)",
+            config.deploy_poll_interval_secs
+        );
+        Some((control, docker))
+    } else {
+        tracing::info!("deployments disabled (set `deploy_enabled = true` to opt in)");
+        None
+    };
+
     runner::run(
         &config,
         collector,
@@ -50,6 +68,7 @@ async fn main() -> Result<()> {
         buffer,
         container_buffer,
         shipper,
+        deploy,
         shutdown_signal(),
     )
     .await;
@@ -59,7 +78,7 @@ async fn main() -> Result<()> {
 async fn shutdown_signal() {
     #[cfg(unix)]
     {
-        use tokio::signal::unix::{signal, SignalKind};
+        use tokio::signal::unix::{SignalKind, signal};
         let mut sigterm = match signal(SignalKind::terminate()) {
             Ok(s) => s,
             Err(err) => {

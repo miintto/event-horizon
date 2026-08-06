@@ -70,9 +70,7 @@ impl HostCollector {
             .disks
             .list()
             .iter()
-            .filter(|disk| {
-                std::path::Path::new(&self.disk_path).starts_with(disk.mount_point())
-            })
+            .filter(|disk| std::path::Path::new(&self.disk_path).starts_with(disk.mount_point()))
             .max_by_key(|disk| disk.mount_point().as_os_str().len());
 
         match best {

@@ -13,3 +13,17 @@ api_key = "xxxxx"
 # max_buffer_size = 2880
 # collect_containers = true
 # max_container_buffer_size = 28800
+
+# Deployment. Opt-in per host: enabling it lets the server create, stop and remove
+# containers on this machine. Leave it off for metric-only hosts.
+# deploy_enabled = false
+# Idle polling costs 3 queries per host per tick, so keep this well above the
+# metric cadence. Lower it only on hosts that deploy often.
+# deploy_poll_interval_secs = 15
+
+# Execution timeouts. These are host-local concerns, so the server does not send them.
+# health_timeout_secs must exceed the revision's healthcheck interval x retries,
+# and must stay well under the server's deployment_timeout_secs (default 600).
+# health_timeout_secs = 60
+# health_settle_secs = 5
+# stop_timeout_secs = 10

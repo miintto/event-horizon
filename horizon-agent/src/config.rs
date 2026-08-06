@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use serde::Deserialize;
 
 /// Configuration
@@ -44,6 +44,27 @@ pub struct Config {
     /// Maximum number of container observations held in the send buffer.
     #[serde(default = "default_max_container_buffer_size")]
     pub max_container_buffer_size: usize,
+
+    /// Whether this host accepts deployments. Opt-in: upgrading the binary alone
+    /// must not hand an existing host an execution channel.
+    #[serde(default)]
+    pub deploy_enabled: bool,
+
+    /// Interval between deployment polls, in seconds.
+    #[serde(default = "default_deploy_poll_interval")]
+    pub deploy_poll_interval_secs: u64,
+
+    /// Upper bound on waiting for a new container to become healthy.
+    #[serde(default = "default_health_timeout")]
+    pub health_timeout_secs: u64,
+
+    /// How long a container must stay up when the revision defines no healthcheck.
+    #[serde(default = "default_health_settle")]
+    pub health_settle_secs: u64,
+
+    /// Grace period passed to `docker stop` before SIGKILL.
+    #[serde(default = "default_stop_timeout")]
+    pub stop_timeout_secs: i32,
 }
 
 fn default_collect_interval() -> u64 {
@@ -78,6 +99,22 @@ fn default_max_container_buffer_size() -> usize {
     28800
 }
 
+fn default_deploy_poll_interval() -> u64 {
+    15
+}
+
+fn default_health_timeout() -> u64 {
+    60
+}
+
+fn default_health_settle() -> u64 {
+    5
+}
+
+fn default_stop_timeout() -> i32 {
+    10
+}
+
 impl Config {
     /// Load configuration
     pub fn load(path: &str) -> Result<Self> {
@@ -107,6 +144,9 @@ impl Config {
         }
         if self.max_container_buffer_size == 0 {
             bail!("max_container_buffer_size must be greater than or equal to 1");
+        }
+        if self.deploy_enabled && self.deploy_poll_interval_secs == 0 {
+            bail!("deploy_poll_interval_secs must be greater than 0");
         }
         Ok(())
     }

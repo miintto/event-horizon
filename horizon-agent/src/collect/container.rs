@@ -153,7 +153,10 @@ impl ContainerCollector {
                 .map(|name| name.trim_start_matches('/').to_string())
                 .unwrap_or_default(),
             image: summary.image.unwrap_or_default(),
-            state: summary.state.map(|state| state.to_string()).unwrap_or_default(),
+            state: summary
+                .state
+                .map(|state| state.to_string())
+                .unwrap_or_default(),
             compose_project: labels.get(COMPOSE_PROJECT_LABEL).cloned(),
             compose_service: labels.get(COMPOSE_SERVICE_LABEL).cloned(),
             datapoint: datapoint_from_stats(collected_at, &stats),
@@ -249,7 +252,10 @@ fn memory_used(stats: &ContainerStatsResponse) -> u64 {
     let inactive = mem
         .stats
         .as_ref()
-        .and_then(|s| s.get("inactive_file").or_else(|| s.get("total_inactive_file")))
+        .and_then(|s| {
+            s.get("inactive_file")
+                .or_else(|| s.get("total_inactive_file"))
+        })
         .copied()
         .unwrap_or(0);
     usage.saturating_sub(inactive)
