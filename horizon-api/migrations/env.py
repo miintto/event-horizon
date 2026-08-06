@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from app.adapters.outbound.persistence.models import (  # noqa: F401
     container,
     container_metric,
+    deployment,
     host,
     host_metric,
     secret,
