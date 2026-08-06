@@ -17,6 +17,14 @@ class HostPersistenceAdapter(BasePersistenceAdapter, HostRepository):
         model = result.scalar_one_or_none()
         return model.to_domain() if model else None
 
+    async def find_by_agent_uuid(self, agent_uuid: UUID) -> Host | None:
+        session = self._scoped_session()
+        result = await session.execute(
+            select(HostModel).where(HostModel.agent_uuid == agent_uuid)
+        )
+        model = result.scalar_one_or_none()
+        return model.to_domain() if model else None
+
     async def find_all(self) -> list[Host]:
         session = self._scoped_session()
         result = await session.execute(select(HostModel).order_by(HostModel.id))

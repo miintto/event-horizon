@@ -4,6 +4,9 @@ from app.adapters.outbound.persistence.container_metric_persistence_adapter impo
 from app.adapters.outbound.persistence.container_persistence_adapter import (
     ContainerPersistenceAdapter,
 )
+from app.adapters.outbound.persistence.deployment_persistence_adapter import (
+    DeploymentPersistenceAdapter,
+)
 from app.adapters.outbound.persistence.host_metric_persistence_adapter import (
     HostMetricPersistenceAdapter,
 )
@@ -31,6 +34,7 @@ from app.application.ports.usecase import (
     CollectUseCase,
     ContainerMetricUseCase,
     ContainerUseCase,
+    DeploymentUseCase,
     HostMetricUseCase,
     HostUseCase,
     SecretUseCase,
@@ -39,6 +43,7 @@ from app.application.ports.usecase import (
 from app.application.services.auth.auth_service import AuthService
 from app.application.services.collect.collect_service import CollectService
 from app.application.services.container.container_service import ContainerService
+from app.application.services.deployment.deployment_service import DeploymentService
 from app.application.services.host.host_service import HostService
 from app.application.services.metric.container_metric_service import (
     ContainerMetricService,
@@ -51,6 +56,7 @@ from app.infrastructure.config import settings
 # Repository
 _container_metric_repository = ContainerMetricPersistenceAdapter()
 _container_repository = ContainerPersistenceAdapter()
+_deployment_repository = DeploymentPersistenceAdapter()
 _host_metric_repository = HostMetricPersistenceAdapter()
 _host_repository = HostPersistenceAdapter()
 _secret_repository = SecretPersistenceAdapter()
@@ -90,6 +96,16 @@ _container_metric_service = ContainerMetricService(
 _container_service = ContainerService(
     container_repository=_container_repository,
 )
+_deployment_service = DeploymentService(
+    container_repository=_container_repository,
+    deployment_repository=_deployment_repository,
+    host_repository=_host_repository,
+    secret_repository=_secret_repository,
+    workload_repository=_workload_repository,
+    workload_revision_repository=_workload_revision_repository,
+    secret_cipher=_secret_cipher,
+    timeout_secs=settings.deployment_timeout_secs,
+)
 _host_metric_service = HostMetricService(
     host_metric_repository=_host_metric_repository,
 )
@@ -124,6 +140,10 @@ async def get_container_metric_service() -> ContainerMetricUseCase:
 
 async def get_container_service() -> ContainerUseCase:
     return _container_service
+
+
+async def get_deployment_service() -> DeploymentUseCase:
+    return _deployment_service
 
 
 async def get_host_metric_service() -> HostMetricUseCase:

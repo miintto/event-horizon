@@ -1,5 +1,6 @@
 from .container_metric_repository import ContainerMetricRepository
 from .container_repository import ContainerRepository
+from .deployment_repository import DeploymentRepository
 from .host_metric_repository import HostMetricRepository
 from .host_repository import HostRepository
 from .secret_repository import SecretRepository
@@ -10,6 +11,7 @@ from .workload_revision_repository import WorkloadRevisionRepository
 __all__ = [
     "ContainerMetricRepository",
     "ContainerRepository",
+    "DeploymentRepository",
     "HostMetricRepository",
     "HostRepository",
     "SecretRepository",

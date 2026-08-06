@@ -2,6 +2,7 @@ from .auth_use_case import AuthUseCase
 from .collect_use_case import CollectUseCase
 from .container_metric_use_case import ContainerMetricUseCase
 from .container_use_case import ContainerUseCase
+from .deployment_use_case import DeploymentUseCase
 from .host_metric_use_case import HostMetricUseCase
 from .host_use_case import HostUseCase
 from .secret_use_case import SecretUseCase
@@ -12,6 +13,7 @@ __all__ = [
     "CollectUseCase",
     "ContainerMetricUseCase",
     "ContainerUseCase",
+    "DeploymentUseCase",
     "HostMetricUseCase",
     "HostUseCase",
     "SecretUseCase",

@@ -1,5 +1,6 @@
 from .container import Container, ContainerState
 from .container_metric import ContainerMetric
+from .deployment import Deployment, DeploymentStatus
 from .host import Host, HostStatus
 from .host_metric import HostMetric
 from .metric import ContainerMetricSeries, HostMetricSeries, MetricPoint
@@ -25,6 +26,8 @@ __all__ = [
     "ContainerState",
     "ContainerMetricSeries",
     "ContainerSpec",
+    "Deployment",
+    "DeploymentStatus",
     "EnvVar",
     "Healthcheck",
     "Host",

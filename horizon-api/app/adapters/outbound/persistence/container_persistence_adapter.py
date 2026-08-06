@@ -30,6 +30,17 @@ class ContainerPersistenceAdapter(BasePersistenceAdapter, ContainerRepository):
         result = await session.execute(stmt)
         return [model.to_domain() for model in result.scalars().all()]
 
+    async def find_docker_ids_alive(self, workload_id: int, host_id: int) -> list[str]:
+        session = self._scoped_session()
+        result = await session.execute(
+            select(ContainerModel.docker_id).where(
+                ContainerModel.workload_id == workload_id,
+                ContainerModel.host_id == host_id,
+                ContainerModel.state != ContainerState.EXITED,
+            )
+        )
+        return list(result.scalars().all())
+
     async def upsert_all(self, containers: list[Container]) -> list[Container]:
         if not containers:
             return []
@@ -101,6 +112,54 @@ class ContainerPersistenceAdapter(BasePersistenceAdapter, ContainerRepository):
             result.extend(model.to_domain() for model in inserted)
 
         return result
+
+    async def upsert_with_revision(self, container: Container) -> Container:
+        session = self._scoped_session()
+        now = datetime.now(UTC)
+
+        model = (
+            await session.execute(
+                select(ContainerModel).where(
+                    ContainerModel.host_id == container.host_id,
+                    ContainerModel.docker_id == container.docker_id,
+                )
+            )
+        ).scalar_one_or_none()
+
+        if model is None:
+            model = ContainerModel(
+                host_id=container.host_id,
+                docker_id=container.docker_id,
+                name=container.name,
+                image=container.image,
+                state=container.state,
+                last_seen_at=now,
+            )
+            session.add(model)
+
+        model.workload_id = container.workload_id
+        model.revision_id = container.revision_id
+        model.name = container.name
+        model.image = container.image
+        await session.flush()
+        return model.to_domain()
+
+    async def mark_exited(self, host_id: int, docker_ids: list[str]) -> int:
+        if not docker_ids:
+            return 0
+
+        session = self._scoped_session()
+        stmt = (
+            update(ContainerModel)
+            .where(
+                ContainerModel.host_id == host_id,
+                ContainerModel.docker_id.in_(docker_ids),
+                ContainerModel.state != ContainerState.EXITED,
+            )
+            .values(state=ContainerState.EXITED)
+        )
+        result = await session.execute(stmt)
+        return result.rowcount  # type: ignore
 
     async def update_state_to_exited(self, host_id: int, seen_before: datetime) -> int:
         session = self._scoped_session()

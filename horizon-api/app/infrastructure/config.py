@@ -26,6 +26,9 @@ class Settings(BaseSettings):
 
     container_stale_after_secs: int = 300
 
+    # 에이전트가 응답하지 않는 배포를 회수하는 임계. 실행 타임아웃은 에이전트 설정이다
+    deployment_timeout_secs: int = 600
+
     @property
     def database_url(self) -> str:
         return (

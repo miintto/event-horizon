@@ -53,6 +53,21 @@ class DuplicateWorkloadNameException(APIException):
     detail = "Workload name already exists"
 
 
+class DeploymentNotFoundException(APIException):
+    status_code = 404
+    detail = "Deployment not found"
+
+
+class DeploymentInProgressException(APIException):
+    status_code = 409
+    detail = "Deployment already in progress for this workload"
+
+
+class RevisionRequiredException(APIException):
+    status_code = 400
+    detail = "Workload has no revision to deploy"
+
+
 class SecretNotFoundException(APIException):
     status_code = 404
     detail = "Secret not found"

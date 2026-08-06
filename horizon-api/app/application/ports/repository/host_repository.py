@@ -9,6 +9,9 @@ class HostRepository(ABC):
     async def find_by_id(self, id_: int) -> Host | None: ...
 
     @abstractmethod
+    async def find_by_agent_uuid(self, agent_uuid: UUID) -> Host | None: ...
+
+    @abstractmethod
     async def find_all(self) -> list[Host]: ...
 
     @abstractmethod
