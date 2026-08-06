@@ -8,7 +8,7 @@ import type { ChartSeries } from "@/components/LineChart";
 import { MetricCard } from "@/components/MetricCard";
 import { ErrorBox, PageHeader, PageShell } from "@/components/PageShell";
 import { RangeControls } from "@/components/RangeControls";
-import { getContainers, getWorkloads, queryContainerMetrics } from "@/lib/api";
+import { getContainers, getWorkload, queryContainerMetrics } from "@/lib/api";
 import { type MetricFormat } from "@/lib/format";
 import {
   CONTAINER_CHARTS,
@@ -63,8 +63,7 @@ function ContainerDashboard() {
   const paramWorkloadId = Number(sp.get("workload_id"));
   const paramContainerId = Number(sp.get("container_id"));
 
-  const [workloads, setWorkloads] = useState<Workload[]>([]);
-  const [workloadsLoading, setWorkloadsLoading] = useState(true);
+  const [workload, setWorkload] = useState<Workload | null>(null);
   const [containers, setContainers] = useState<Container[]>([]);
   const [containersLoading, setContainersLoading] = useState(true);
   const [charts, setCharts] = useState<ResolvedChart[]>([]);
@@ -72,41 +71,17 @@ function ContainerDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
-  useEffect(() => {
-    let active = true;
-
-    async function loadWorkloads() {
-      setWorkloadsLoading(true);
-      try {
-        const list = await getWorkloads();
-        if (active) setWorkloads(list);
-      } catch (e) {
-        if (active) {
-          setError(e instanceof Error ? e.message : "Cannot load workloads.");
-        }
-      } finally {
-        if (active) setWorkloadsLoading(false);
-      }
-    }
-
-    void loadWorkloads();
-
-    return () => {
-      active = false;
-    };
-  }, [reloadKey]);
-
   const workloadId =
     Number.isFinite(paramWorkloadId) && paramWorkloadId > 0
       ? paramWorkloadId
       : null;
-  const workload = workloads.find((w) => w.id === workloadId) ?? null;
 
   useEffect(() => {
     const id = workloadId;
     let active = true;
 
     async function loadContainers() {
+      setWorkload(null);
       setContainers([]);
       if (id == null) {
         setContainersLoading(false);
@@ -115,8 +90,14 @@ function ContainerDashboard() {
 
       setContainersLoading(true);
       try {
-        const list = await getContainers({ workloadId: id });
-        if (active) setContainers(list);
+        const [detail, list] = await Promise.all([
+          getWorkload(id),
+          getContainers({ workloadId: id }),
+        ]);
+        if (active) {
+          setWorkload(detail);
+          setContainers(list);
+        }
       } catch (e) {
         if (active) {
           setError(e instanceof Error ? e.message : "Cannot load containers.");
@@ -243,8 +224,6 @@ function ContainerDashboard() {
     return `/workloads/containers?${qs}`;
   }
 
-  const listLoading = workloadsLoading || containersLoading;
-
   return (
     <PageShell>
       <PageHeader title={workload?.name ?? "Workload"} />
@@ -254,7 +233,7 @@ function ContainerDashboard() {
         <RangeControls
           interval={interval}
           range={range}
-          busy={loading || listLoading}
+          busy={loading || containersLoading}
           onRefresh={() => setReloadKey((k) => k + 1)}
         />
       </div>
@@ -267,7 +246,7 @@ function ContainerDashboard() {
             <h2 className="mb-3 text-sm font-medium text-neutral-400">
               Containers {containers.length > 0 && `(${containers.length})`}
             </h2>
-            {listLoading ? (
+            {containersLoading ? (
               <p className="text-sm text-neutral-500">Loading…</p>
             ) : containers.length === 0 ? (
               <p className="text-sm text-neutral-400">No containers.</p>
@@ -280,7 +259,7 @@ function ContainerDashboard() {
             )}
           </section>
 
-          {listLoading || (loading && charts.length === 0) ? (
+          {containersLoading || (loading && charts.length === 0) ? (
             <p className="mt-8 text-sm text-neutral-500">Loading…</p>
           ) : containers.length === 0 ? null : (
             <section className="mt-8">

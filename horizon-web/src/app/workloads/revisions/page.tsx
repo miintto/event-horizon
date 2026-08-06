@@ -9,7 +9,7 @@ import {
   PageHeader,
   PageShell,
 } from "@/components/PageShell";
-import { createRevision, getRevisions, getWorkloads } from "@/lib/api";
+import { createRevision, getRevisions, getWorkload } from "@/lib/api";
 import type {
   RevisionDefinitionInput,
   Workload,
@@ -33,7 +33,7 @@ function WorkloadDetails() {
   const sp = useSearchParams();
   const paramWorkloadId = Number(sp.get("workload_id"));
 
-  const [workloads, setWorkloads] = useState<Workload[]>([]);
+  const [workload, setWorkload] = useState<Workload | null>(null);
   const [revisions, setRevisions] = useState<WorkloadRevision[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -41,38 +41,17 @@ function WorkloadDetails() {
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
-  useEffect(() => {
-    let active = true;
-
-    async function load() {
-      try {
-        const list = await getWorkloads();
-        if (active) setWorkloads(list);
-      } catch (e) {
-        if (active) {
-          setError(e instanceof Error ? e.message : "Cannot load workloads.");
-        }
-      }
-    }
-
-    void load();
-
-    return () => {
-      active = false;
-    };
-  }, [reloadKey]);
-
   const workloadId =
     Number.isFinite(paramWorkloadId) && paramWorkloadId > 0
       ? paramWorkloadId
       : null;
-  const workload = workloads.find((w) => w.id === workloadId) ?? null;
 
   useEffect(() => {
     const id = workloadId;
     let active = true;
 
     async function load() {
+      setWorkload(null);
       setRevisions([]);
       setSelectedId(null);
       if (id == null) {
@@ -81,8 +60,12 @@ function WorkloadDetails() {
       }
       setLoading(true);
       try {
-        const list = await getRevisions(id);
+        const [detail, list] = await Promise.all([
+          getWorkload(id),
+          getRevisions(id),
+        ]);
         if (active) {
+          setWorkload(detail);
           setRevisions(list);
           setSelectedId(list[0]?.id ?? null);
         }
