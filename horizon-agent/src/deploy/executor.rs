@@ -65,7 +65,10 @@ fn failed(error_message: impl Into<String>) -> Outcome {
 
 pub async fn deploy(docker: &Docker, job: &DeploymentJob, timeouts: Timeouts) -> Outcome {
     if let Err(err) = pull_image(docker, &job.image).await {
-        return failed(format!("pull failed: {err}"));
+        if docker.inspect_image(&job.image).await.is_err() {
+            return failed(format!("pull failed: {err}"));
+        }
+        tracing::warn!("pull failed, using local image {}: {err}", job.image);
     }
 
     // 1. create container
