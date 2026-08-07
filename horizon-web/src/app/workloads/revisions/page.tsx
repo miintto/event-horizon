@@ -21,15 +21,15 @@ import { WorkloadTabs } from "../WorkloadTabs";
 import { RevisionDetail } from "./RevisionDetail";
 import { RevisionList } from "./RevisionList";
 
-export default function WorkloadDetailsPage() {
+export default function RevisionPage() {
   return (
     <Suspense fallback={<PageShell>Loading…</PageShell>}>
-      <WorkloadDetails />
+      <Revisions />
     </Suspense>
   );
 }
 
-function WorkloadDetails() {
+function Revisions() {
   const sp = useSearchParams();
   const paramWorkloadId = Number(sp.get("workload_id"));
 

@@ -4,6 +4,7 @@ import type {
   Container,
   ContainerMetricKind,
   ContainerMetricSeries,
+  Deployment,
   Host,
   HostMetricSeries,
   MetricKind,
@@ -20,7 +21,6 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 async function apiGet<T>(path: string): Promise<T> {
   const token = getToken();
   if (!token) {
-    // 토큰이 없으면 요청을 보내봐야 401이므로 곧바로 로그인으로 보낸다
     redirectToLogin();
     throw new Error("Unauthorized");
   }
@@ -88,7 +88,6 @@ async function apiPut<T>(path: string, body: unknown): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-/** 204 No Content 라 본문을 읽지 않는다 */
 async function apiDelete(path: string): Promise<void> {
   const token = getToken();
   if (!token) {
@@ -109,7 +108,6 @@ async function apiDelete(path: string): Promise<void> {
   }
 }
 
-/** FastAPI 검증 오류(422)는 detail 배열이라 사람이 읽을 문장으로 풀어준다 */
 async function describeError(
   res: Response,
   method: string,
@@ -127,9 +125,7 @@ async function describeError(
         })
         .join("\n");
     }
-  } catch {
-    // 본문이 JSON 이 아니면 상태 코드만 노출
-  }
+  } catch {}
   return `horizon-api ${method} ${path} failed (${res.status})`;
 }
 
@@ -236,7 +232,33 @@ export function createRevision(
   );
 }
 
-/** ADMIN 전용. MEMBER 토큰이면 403 */
+export function getDeployments(params?: {
+  hostId?: number;
+  workloadId?: number;
+}): Promise<Deployment[]> {
+  const search = new URLSearchParams();
+  if (params?.hostId != null) {
+    search.set("host_id", String(params.hostId));
+  }
+  if (params?.workloadId != null) {
+    search.set("workload_id", String(params.workloadId));
+  }
+  const qs = search.toString();
+  return apiGet<Deployment[]>(`/api/deployments${qs ? `?${qs}` : ""}`);
+}
+
+export function createDeployment(body: {
+  hostId: number;
+  workloadId: number;
+  revisionId?: number;
+}): Promise<Deployment> {
+  return apiPost<Deployment>("/api/deployments", {
+    host_id: body.hostId,
+    workload_id: body.workloadId,
+    revision_id: body.revisionId,
+  });
+}
+
 export function getSecrets(params?: {
   page?: number;
   size?: number;
@@ -256,7 +278,6 @@ export function createSecret(name: string, value: string): Promise<Secret> {
   return apiPost<Secret>("/api/secrets", { name, value });
 }
 
-/** 이름은 바꿀 수 없다. 바꾸면 참조하던 revision 이 끊긴다 */
 export function updateSecret(secretId: number, value: string): Promise<Secret> {
   return apiPut<Secret>(`/api/secrets/${secretId}`, { value });
 }

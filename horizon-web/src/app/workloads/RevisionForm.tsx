@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { FormActions } from "@/components/FormActions";
 import { ErrorBox } from "@/components/PageShell";
 import { formatCores, MIB } from "@/lib/format";
 import type { RevisionDefinitionInput, WorkloadRevision } from "@/lib/types";
@@ -75,7 +76,7 @@ export function RevisionForm({
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            placeholder="redis-cache"
+            placeholder="app-api-prod"
             className={INPUT}
           />
         </Field>
@@ -86,7 +87,7 @@ export function RevisionForm({
           value={image}
           onChange={(e) => setImage(e.target.value)}
           required
-          placeholder="redis:8.10-alpine"
+          placeholder="app-api:latest"
           className={INPUT}
         />
       </Field>
@@ -131,28 +132,13 @@ export function RevisionForm({
         </ErrorBox>
       )}
 
-      <div className="flex items-center gap-2">
-        <button
-          type="submit"
-          disabled={busy}
-          className="cursor-pointer rounded-md bg-accent/80 px-3 py-2 text-sm font-medium text-white hover:bg-accent/95 disabled:opacity-60"
-        >
-          {busy ? "Saving…" : submitLabel}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="cursor-pointer rounded-md px-3 py-2 text-sm font-medium text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
-        >
-          Cancel
-        </button>
-      </div>
+      <FormActions submitLabel={submitLabel} busy={busy} onCancel={onCancel} />
     </form>
   );
 }
 
 const INPUT =
-  "w-full rounded-md border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-neutral-100 outline-none focus:border-neutral-500";
+  "w-full rounded-md border placeholder-neutral-600 border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-neutral-100 outline-none focus:border-neutral-500";
 
 function Field({
   label,

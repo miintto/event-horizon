@@ -6,7 +6,6 @@ import type { WorkloadRevision } from "@/lib/types";
 interface RevisionListProps {
   revisions: WorkloadRevision[];
   selectedId: number | null;
-  /** workload 가 현재 가리키는 revision. 배지로 표시한다 */
   currentRevisionId?: number;
   onSelect: (id: number) => void;
 }

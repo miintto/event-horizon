@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const TABS = [
   { href: "/workloads/containers", label: "Containers" },
   { href: "/workloads/revisions", label: "Revisions" },
+  { href: "/workloads/deployments", label: "Deployments" },
 ];
 
 export function WorkloadTabs({ workloadId }: { workloadId: number | null }) {

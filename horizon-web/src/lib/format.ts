@@ -1,6 +1,5 @@
 export type MetricFormat = "percent" | "bytes" | "rate" | "load" | "count";
 
-/** memory_limit 는 바이트 단위로 오가고 화면에는 MiB 로 보인다 */
 export const MIB = 1024 * 1024;
 
 function formatBytes(value: number): string {

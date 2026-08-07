@@ -81,7 +81,69 @@ export interface ContainerMetricSeries {
 }
 
 /** 정의 본문. 서버가 JSONB 로 보관하며 형태 검증만 한다 */
-export type ContainerSpec = Record<string, unknown>;
+export interface EnvVar {
+  name: string;
+  value: string;
+}
+
+/** 값은 실리지 않는다. 참조 이름만 온다 */
+export interface SecretRef {
+  name: string;
+  ref: string;
+}
+
+export interface PortBinding {
+  container_port: number;
+  host_port?: number;
+  protocol: string;
+}
+
+export interface Mount {
+  type: string;
+  source: string;
+  target: string;
+  read_only: boolean;
+}
+
+export interface RestartPolicy {
+  name: string;
+  max_retry: number;
+}
+
+export interface Healthcheck {
+  test: string[];
+  interval_secs?: number;
+  timeout_secs?: number;
+  retries?: number;
+}
+
+export interface Network {
+  mode?: string;
+  names: string[];
+}
+
+export interface LogConfig {
+  driver: string;
+  options: Record<string, string>;
+}
+
+/**
+ * `response_model_exclude_none=True` 라 null 필드는 키 자체가 빠지고,
+ * 빈 배열·객체는 그대로 온다.
+ */
+export interface ContainerSpec {
+  command?: string[];
+  entrypoint?: string[];
+  env?: EnvVar[];
+  secrets?: SecretRef[];
+  ports?: PortBinding[];
+  mounts?: Mount[];
+  restart_policy?: RestartPolicy;
+  healthcheck?: Healthcheck;
+  labels?: Record<string, string>;
+  network?: Network;
+  log?: LogConfig;
+}
 
 export interface WorkloadRevision {
   id: number;
@@ -108,6 +170,21 @@ export interface Workload {
   container_count?: number;
   running_count?: number;
   host_count?: number;
+  created_at?: string;
+}
+
+export type DeploymentStatus = "pending" | "running" | "succeeded" | "failed";
+
+export interface Deployment {
+  id: number;
+  host_id: number;
+  workload_id: number;
+  revision_id: number;
+  container_id?: number;
+  status: DeploymentStatus;
+  error_message?: string;
+  claimed_at?: string;
+  finished_at?: string;
   created_at?: string;
 }
 

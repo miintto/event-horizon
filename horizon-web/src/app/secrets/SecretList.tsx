@@ -41,7 +41,6 @@ export function SecretList({ secrets, onEdit, onDelete }: SecretListProps) {
   );
 }
 
-/** 아이콘만 있는 행 액션. 라벨은 aria-label 과 툴팁으로만 노출된다 */
 function RowButton({
   danger = false,
   label,

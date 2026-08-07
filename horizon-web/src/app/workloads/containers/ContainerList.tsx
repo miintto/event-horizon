@@ -8,7 +8,6 @@ import type { Container } from "@/lib/types";
 
 interface ContainerListProps {
   containers: Container[];
-  /** 선택된 컨테이너. 없으면 전체 보기 */
   selectedId: number | null;
   hrefFor: (id: number) => string;
 }
@@ -47,7 +46,6 @@ export function ContainerList({
   );
 }
 
-/** 목록·차트 라벨·헤더가 같은 표기를 쓰도록 한 곳에서 만든다 */
 export function shortId(container: Container): string {
   return container.docker_id.slice(0, 12);
 }
