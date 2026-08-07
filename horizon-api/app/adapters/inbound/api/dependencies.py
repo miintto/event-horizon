@@ -38,6 +38,7 @@ from app.application.ports.usecase import (
     HostMetricUseCase,
     HostUseCase,
     SecretUseCase,
+    UserUseCase,
     WorkloadUseCase,
 )
 from app.application.services.auth.auth_service import AuthService
@@ -50,6 +51,7 @@ from app.application.services.metric.container_metric_service import (
 )
 from app.application.services.metric.host_metric_service import HostMetricService
 from app.application.services.secret.secret_service import SecretService
+from app.application.services.user.user_service import UserService
 from app.application.services.workload.workload_service import WorkloadService
 from app.infrastructure.config import settings
 
@@ -116,6 +118,9 @@ _secret_service = SecretService(
     secret_repository=_secret_repository,
     secret_cipher=_secret_cipher,
 )
+_user_service = UserService(
+    user_repository=_user_repository,
+)
 _workload_service = WorkloadService(
     workload_repository=_workload_repository,
     workload_revision_repository=_workload_revision_repository,
@@ -156,6 +161,10 @@ async def get_host_service() -> HostUseCase:
 
 async def get_secret_service() -> SecretUseCase:
     return _secret_service
+
+
+async def get_user_service() -> UserUseCase:
+    return _user_service
 
 
 async def get_workload_service() -> WorkloadUseCase:

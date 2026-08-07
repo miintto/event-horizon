@@ -10,6 +10,7 @@ from app.adapters.inbound.api.routers.deployment_router import (
 from app.adapters.inbound.api.routers.host_router import router as host_router
 from app.adapters.inbound.api.routers.metric_router import router as metric_router
 from app.adapters.inbound.api.routers.secret_router import router as secret_router
+from app.adapters.inbound.api.routers.user_router import router as user_router
 from app.adapters.inbound.api.routers.workload_router import router as workload_router
 
 api_router = APIRouter(prefix="/api")
@@ -22,5 +23,6 @@ protected_router.include_router(container_router)
 protected_router.include_router(deployment_router)
 protected_router.include_router(host_router)
 protected_router.include_router(secret_router)
+protected_router.include_router(user_router)
 protected_router.include_router(workload_router)
 api_router.include_router(protected_router)

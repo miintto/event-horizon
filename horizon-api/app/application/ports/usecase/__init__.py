@@ -6,6 +6,7 @@ from .deployment_use_case import DeploymentUseCase
 from .host_metric_use_case import HostMetricUseCase
 from .host_use_case import HostUseCase
 from .secret_use_case import SecretUseCase
+from .user_use_case import UserUseCase
 from .workload_use_case import WorkloadUseCase
 
 __all__ = [
@@ -17,5 +18,6 @@ __all__ = [
     "HostMetricUseCase",
     "HostUseCase",
     "SecretUseCase",
+    "UserUseCase",
     "WorkloadUseCase",
 ]
