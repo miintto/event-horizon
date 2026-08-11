@@ -13,9 +13,7 @@ from app.adapters.inbound.api.schemas.network import (
 from app.adapters.inbound.api.schemas.workload import WorkloadResponse
 from app.application.ports.usecase import NetworkUseCase
 
-router = APIRouter(
-    prefix="/networks", tags=["network"], dependencies=[Depends(verify_admin)]
-)
+router = APIRouter(prefix="/networks", tags=["network"])
 
 
 @router.get(
@@ -36,6 +34,7 @@ async def get_networks(
     response_model=NetworkResponse,
     response_model_exclude_none=True,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(verify_admin)],
 )
 async def create_network(
     body: NetworkCreateRequest,
@@ -48,6 +47,7 @@ async def create_network(
 @router.delete(
     "/{network_id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(verify_admin)],
 )
 async def delete_network(
     network_id: int,
@@ -72,6 +72,7 @@ async def get_network_workloads(
 @router.post(
     "/{network_id}/workloads",
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(verify_admin)],
 )
 async def attach_workload(
     network_id: int,
@@ -84,6 +85,7 @@ async def attach_workload(
 @router.delete(
     "/{network_id}/workloads/{workload_id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(verify_admin)],
 )
 async def detach_workload(
     network_id: int,

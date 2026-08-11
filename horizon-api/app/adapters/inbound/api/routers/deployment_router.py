@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Query, status
 
+from app.adapters.inbound.api.auth import verify_admin
 from app.adapters.inbound.api.dependencies import get_deployment_service
 from app.adapters.inbound.api.schemas.deployment import (
     DeploymentCreateRequest,
@@ -29,6 +30,7 @@ async def get_deployments(
     response_model=DeploymentResponse,
     response_model_exclude_none=True,
     status_code=status.HTTP_202_ACCEPTED,
+    dependencies=[Depends(verify_admin)],
 )
 async def create_deployment(
     body: DeploymentCreateRequest,
