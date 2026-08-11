@@ -12,9 +12,12 @@ from app.adapters.outbound.persistence.models import (  # noqa: F401
     deployment,
     host,
     host_metric,
+    network,
+    network_host_state,
     secret,
     user,
     workload,
+    workload_network,
     workload_revision,
 )
 from app.infrastructure.config import settings

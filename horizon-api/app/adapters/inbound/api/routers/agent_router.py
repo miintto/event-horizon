@@ -4,18 +4,25 @@ from app.adapters.inbound.api.auth import verify_agent
 from app.adapters.inbound.api.dependencies import (
     get_collect_service,
     get_deployment_service,
+    get_network_sync_service,
 )
 from app.adapters.inbound.api.schemas.agent import (
     DeploymentClaimRequest,
     DeploymentClaimResponse,
     DeploymentResultRequest,
+    NetworkSyncRequest,
+    NetworkSyncResponse,
 )
 from app.adapters.inbound.api.schemas.deployment import DeploymentResponse
 from app.adapters.inbound.api.schemas.metric import (
     HostMetricBatchRequest,
     HostMetricCollectResponse,
 )
-from app.application.ports.usecase import CollectUseCase, DeploymentUseCase
+from app.application.ports.usecase import (
+    CollectUseCase,
+    DeploymentUseCase,
+    NetworkSyncUseCase,
+)
 
 router = APIRouter(
     prefix="/agents", tags=["agent"], dependencies=[Depends(verify_agent)]
@@ -65,3 +72,16 @@ async def report_deployment(
 ):
     deployment = await service.report(body.to_command(deployment_id))
     return DeploymentResponse.from_domain(deployment)
+
+
+@router.post(
+    "/networks/sync",
+    response_model=NetworkSyncResponse,
+    response_model_exclude_none=True,
+)
+async def sync_networks(
+    body: NetworkSyncRequest,
+    service: NetworkSyncUseCase = Depends(get_network_sync_service),
+):
+    state = await service.sync(body.to_command())
+    return NetworkSyncResponse.from_result(state)

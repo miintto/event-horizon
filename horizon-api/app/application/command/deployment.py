@@ -34,6 +34,14 @@ class DeploymentReportCommand:
 
 
 @dataclass
+class NetworkAttachment:
+    name: str
+    driver: str
+    options: dict[str, str] = field(default_factory=dict)
+    aliases: list[str] = field(default_factory=list)
+
+
+@dataclass
 class ClaimResult:
     deployment_id: int
     container_name: str
@@ -42,4 +50,5 @@ class ClaimResult:
     cpu_limit: Decimal | None = None
     memory_limit: int | None = None
     labels: dict[str, str] = field(default_factory=dict)
+    networks: list[NetworkAttachment] = field(default_factory=list)
     previous_docker_ids: list[str] = field(default_factory=list)

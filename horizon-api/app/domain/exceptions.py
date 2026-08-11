@@ -73,6 +73,21 @@ class RevisionRequiredException(APIException):
     detail = "Workload has no revision to deploy"
 
 
+class NetworkNotFoundException(APIException):
+    status_code = 404
+    detail = "Network not found"
+
+
+class DuplicateNetworkNameException(APIException):
+    status_code = 409
+    detail = "Network name already exists"
+
+
+class DuplicateNetworkAttachmentException(APIException):
+    status_code = 409
+    detail = "Workload is already attached to this network"
+
+
 class SecretNotFoundException(APIException):
     status_code = 404
     detail = "Secret not found"

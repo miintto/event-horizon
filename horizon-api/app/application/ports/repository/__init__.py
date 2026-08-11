@@ -3,8 +3,11 @@ from .container_repository import ContainerRepository
 from .deployment_repository import DeploymentRepository
 from .host_metric_repository import HostMetricRepository
 from .host_repository import HostRepository
+from .network_host_state_repository import NetworkHostStateRepository
+from .network_repository import NetworkRepository
 from .secret_repository import SecretRepository
 from .user_repository import UserRepository
+from .workload_network_repository import WorkloadNetworkRepository
 from .workload_repository import WorkloadRepository
 from .workload_revision_repository import WorkloadRevisionRepository
 
@@ -14,8 +17,11 @@ __all__ = [
     "DeploymentRepository",
     "HostMetricRepository",
     "HostRepository",
+    "NetworkHostStateRepository",
+    "NetworkRepository",
     "SecretRepository",
     "UserRepository",
+    "WorkloadNetworkRepository",
     "WorkloadRepository",
     "WorkloadRevisionRepository",
 ]

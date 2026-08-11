@@ -45,12 +45,6 @@ class Healthcheck:
 
 
 @dataclass(frozen=True, kw_only=True)
-class Network:
-    mode: str | None = None
-    names: list[str] = field(default_factory=list)
-
-
-@dataclass(frozen=True, kw_only=True)
 class LogConfig:
     driver: str
     options: dict[str, str] = field(default_factory=dict)
@@ -67,7 +61,7 @@ class ContainerSpec:
     restart_policy: RestartPolicy | None = None
     healthcheck: Healthcheck | None = None
     labels: dict[str, str] = field(default_factory=dict)
-    network: Network | None = None
+    network_mode: str | None = None
     log: LogConfig | None = None
 
 

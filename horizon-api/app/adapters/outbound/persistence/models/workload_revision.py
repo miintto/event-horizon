@@ -21,7 +21,6 @@ from app.domain.models import (
     Healthcheck,
     LogConfig,
     Mount,
-    Network,
     PortBinding,
     RestartPolicy,
     SecretRef,
@@ -82,7 +81,7 @@ class WorkloadRevisionModel(Base):
     def _spec_from_json(self, raw: dict) -> ContainerSpec:
         restart_policy = raw.get("restart_policy")
         healthcheck = raw.get("healthcheck")
-        network = raw.get("network")
+        legacy_network = raw.get("network") or {}
         log = raw.get("log")
         return ContainerSpec(
             command=raw.get("command"),
@@ -94,6 +93,6 @@ class WorkloadRevisionModel(Base):
             restart_policy=RestartPolicy(**restart_policy) if restart_policy else None,
             healthcheck=Healthcheck(**healthcheck) if healthcheck else None,
             labels=raw.get("labels", {}),
-            network=Network(**network) if network else None,
+            network_mode=raw.get("network_mode") or legacy_network.get("mode"),
             log=LogConfig(**log) if log else None,
         )

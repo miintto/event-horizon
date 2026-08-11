@@ -5,6 +5,8 @@ from .container_use_case import ContainerUseCase
 from .deployment_use_case import DeploymentUseCase
 from .host_metric_use_case import HostMetricUseCase
 from .host_use_case import HostUseCase
+from .network_sync_use_case import NetworkSyncUseCase
+from .network_use_case import NetworkUseCase
 from .secret_use_case import SecretUseCase
 from .user_use_case import UserUseCase
 from .workload_use_case import WorkloadUseCase
@@ -17,6 +19,8 @@ __all__ = [
     "DeploymentUseCase",
     "HostMetricUseCase",
     "HostUseCase",
+    "NetworkSyncUseCase",
+    "NetworkUseCase",
     "SecretUseCase",
     "UserUseCase",
     "WorkloadUseCase",

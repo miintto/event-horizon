@@ -4,6 +4,7 @@ from .deployment import Deployment, DeploymentStatus
 from .host import Host, HostStatus
 from .host_metric import HostMetric
 from .metric import ContainerMetricSeries, HostMetricSeries, MetricPoint
+from .network import Network, NetworkHostState, NetworkSyncStatus, WorkloadNetwork
 from .secret import Secret
 from .user import User, UserRole
 from .workload import Workload, WorkloadDetail
@@ -13,7 +14,6 @@ from .workload_revision import (
     Healthcheck,
     LogConfig,
     Mount,
-    Network,
     PortBinding,
     RestartPolicy,
     SecretRef,
@@ -38,6 +38,8 @@ __all__ = [
     "MetricPoint",
     "Mount",
     "Network",
+    "NetworkHostState",
+    "NetworkSyncStatus",
     "PortBinding",
     "RestartPolicy",
     "Secret",
@@ -46,5 +48,6 @@ __all__ = [
     "UserRole",
     "Workload",
     "WorkloadDetail",
+    "WorkloadNetwork",
     "WorkloadRevision",
 ]

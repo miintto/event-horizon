@@ -13,11 +13,20 @@ from app.adapters.outbound.persistence.host_metric_persistence_adapter import (
 from app.adapters.outbound.persistence.host_persistence_adapter import (
     HostPersistenceAdapter,
 )
+from app.adapters.outbound.persistence.network_host_state_persistence_adapter import (
+    NetworkHostStatePersistenceAdapter,
+)
+from app.adapters.outbound.persistence.network_persistence_adapter import (
+    NetworkPersistenceAdapter,
+)
 from app.adapters.outbound.persistence.secret_persistence_adapter import (
     SecretPersistenceAdapter,
 )
 from app.adapters.outbound.persistence.user_persistence_adapter import (
     UserPersistenceAdapter,
+)
+from app.adapters.outbound.persistence.workload_network_persistence_adapter import (
+    WorkloadNetworkPersistenceAdapter,
 )
 from app.adapters.outbound.persistence.workload_persistence_adapter import (
     WorkloadPersistenceAdapter,
@@ -37,6 +46,8 @@ from app.application.ports.usecase import (
     DeploymentUseCase,
     HostMetricUseCase,
     HostUseCase,
+    NetworkSyncUseCase,
+    NetworkUseCase,
     SecretUseCase,
     UserUseCase,
     WorkloadUseCase,
@@ -50,6 +61,8 @@ from app.application.services.metric.container_metric_service import (
     ContainerMetricService,
 )
 from app.application.services.metric.host_metric_service import HostMetricService
+from app.application.services.network.network_service import NetworkService
+from app.application.services.network.network_sync_service import NetworkSyncService
 from app.application.services.secret.secret_service import SecretService
 from app.application.services.user.user_service import UserService
 from app.application.services.workload.workload_service import WorkloadService
@@ -61,8 +74,11 @@ _container_repository = ContainerPersistenceAdapter()
 _deployment_repository = DeploymentPersistenceAdapter()
 _host_metric_repository = HostMetricPersistenceAdapter()
 _host_repository = HostPersistenceAdapter()
+_network_host_state_repository = NetworkHostStatePersistenceAdapter()
+_network_repository = NetworkPersistenceAdapter()
 _secret_repository = SecretPersistenceAdapter()
 _user_repository = UserPersistenceAdapter()
+_workload_network_repository = WorkloadNetworkPersistenceAdapter()
 _workload_repository = WorkloadPersistenceAdapter()
 _workload_revision_repository = WorkloadRevisionPersistenceAdapter()
 
@@ -102,7 +118,9 @@ _deployment_service = DeploymentService(
     container_repository=_container_repository,
     deployment_repository=_deployment_repository,
     host_repository=_host_repository,
+    network_repository=_network_repository,
     secret_repository=_secret_repository,
+    workload_network_repository=_workload_network_repository,
     workload_repository=_workload_repository,
     workload_revision_repository=_workload_revision_repository,
     secret_cipher=_secret_cipher,
@@ -113,6 +131,18 @@ _host_metric_service = HostMetricService(
 )
 _host_service = HostService(
     host_repository=_host_repository,
+)
+_network_service = NetworkService(
+    network_host_state_repository=_network_host_state_repository,
+    network_repository=_network_repository,
+    workload_network_repository=_workload_network_repository,
+    workload_repository=_workload_repository,
+)
+_network_sync_service = NetworkSyncService(
+    host_repository=_host_repository,
+    network_host_state_repository=_network_host_state_repository,
+    network_repository=_network_repository,
+    workload_repository=_workload_repository,
 )
 _secret_service = SecretService(
     secret_repository=_secret_repository,
@@ -157,6 +187,14 @@ async def get_host_metric_service() -> HostMetricUseCase:
 
 async def get_host_service() -> HostUseCase:
     return _host_service
+
+
+async def get_network_service() -> NetworkUseCase:
+    return _network_service
+
+
+async def get_network_sync_service() -> NetworkSyncUseCase:
+    return _network_sync_service
 
 
 async def get_secret_service() -> SecretUseCase:

@@ -7,12 +7,15 @@ from app.application.command.deployment import (
     DeploymentCreateCommand,
     DeploymentReportCommand,
     DeploymentSearchQuery,
+    NetworkAttachment,
 )
 from app.application.ports.repository import (
     ContainerRepository,
     DeploymentRepository,
     HostRepository,
+    NetworkRepository,
     SecretRepository,
+    WorkloadNetworkRepository,
     WorkloadRepository,
     WorkloadRevisionRepository,
 )
@@ -46,7 +49,9 @@ class DeploymentService(DeploymentUseCase):
         container_repository: ContainerRepository,
         deployment_repository: DeploymentRepository,
         host_repository: HostRepository,
+        network_repository: NetworkRepository,
         secret_repository: SecretRepository,
+        workload_network_repository: WorkloadNetworkRepository,
         workload_repository: WorkloadRepository,
         workload_revision_repository: WorkloadRevisionRepository,
         secret_cipher: SecretCipher,
@@ -55,7 +60,9 @@ class DeploymentService(DeploymentUseCase):
         self._container_repository = container_repository
         self._deployment_repository = deployment_repository
         self._host_repository = host_repository
+        self._network_repository = network_repository
         self._secret_repository = secret_repository
+        self._workload_network_repository = workload_network_repository
         self._workload_repository = workload_repository
         self._workload_revision_repository = workload_revision_repository
         self._secret_cipher = secret_cipher
@@ -138,6 +145,7 @@ class DeploymentService(DeploymentUseCase):
                 "horizon.revision_id": str(deployment.revision_id),
                 "horizon.deployment_id": str(deployment.pk),
             },
+            networks=await self._resolve_networks(workload, spec),
             previous_docker_ids=await self._container_repository.find_docker_ids_alive(
                 workload_id=deployment.workload_id, host_id=host.pk
             ),
@@ -190,6 +198,29 @@ class DeploymentService(DeploymentUseCase):
             )
         return replace(spec, env=env, secrets=[])
 
+    async def _resolve_networks(
+        self, workload: Workload, spec: ContainerSpec
+    ) -> list[NetworkAttachment]:
+        if spec.network_mode in ("host", "none"):
+            return []
+
+        attachments = []
+        for wn in await self._workload_network_repository.find_all_by_workload_id(
+            workload.pk
+        ):
+            network = await self._network_repository.find_by_id(wn.network_id)
+            if not network:
+                continue
+            attachments.append(
+                NetworkAttachment(
+                    name=network.name,
+                    driver=network.driver,
+                    options=network.options,
+                    aliases=[wn.alias or workload.name],
+                )
+            )
+        return attachments
+
     async def _link_container(
         self, deployment: Deployment, command: DeploymentReportCommand
     ) -> int | None:
@@ -216,7 +247,7 @@ class DeploymentService(DeploymentUseCase):
         )
         return container.pk
 
-    async def _abort(self, deployment: Deployment, error_message: str) -> None:
+    async def _abort(self, deployment: Deployment, error_message: str):
         deployment.status = DeploymentStatus.FAILED
         deployment.error_message = error_message
         deployment.finished_at = datetime.now(UTC)

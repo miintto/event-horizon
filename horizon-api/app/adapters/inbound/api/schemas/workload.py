@@ -15,7 +15,6 @@ from app.domain.models import (
     Healthcheck,
     LogConfig,
     Mount,
-    Network,
     PortBinding,
     RestartPolicy,
     SecretRef,
@@ -59,11 +58,6 @@ class HealthcheckRequest(BaseModel):
     retries: int | None = Field(default=None, ge=0)
 
 
-class NetworkRequest(BaseModel):
-    mode: str | None = None
-    names: list[str] = Field(default_factory=list)
-
-
 class LogConfigRequest(BaseModel):
     driver: str
     options: dict[str, str] = Field(default_factory=dict)
@@ -79,7 +73,7 @@ class BaseContainerSpec(BaseModel):
     restart_policy: RestartPolicyRequest | None = None
     healthcheck: HealthcheckRequest | None = None
     labels: dict[str, str] = Field(default_factory=dict)
-    network: NetworkRequest | None = None
+    network_mode: str | None = None
     log: LogConfigRequest | None = None
 
 
@@ -110,7 +104,7 @@ class ContainerSpecRequest(BaseContainerSpec):
                 else None
             ),
             labels=self.labels,
-            network=Network(**self.network.model_dump()) if self.network else None,
+            network_mode=self.network_mode,
             log=LogConfig(**self.log.model_dump()) if self.log else None,
         )
 

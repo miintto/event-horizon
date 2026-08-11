@@ -24,6 +24,18 @@ class WorkloadPersistenceAdapter(BasePersistenceAdapter, WorkloadRepository):
         model = result.scalar_one_or_none()
         return model.to_domain() if model else None
 
+    async def find_all_by_ids(self, ids: list[int]) -> list[Workload]:
+        if not ids:
+            return []
+
+        session = self._scoped_session()
+        result = await session.execute(
+            select(WorkloadModel)
+            .where(WorkloadModel.id.in_(ids))
+            .order_by(WorkloadModel.id)
+        )
+        return [model.to_domain() for model in result.scalars().all()]
+
     async def find_all_with_counts(self, host_id: int | None) -> list[Workload]:
         session = self._scoped_session()
         join_condition = ContainerModel.workload_id == WorkloadModel.id
