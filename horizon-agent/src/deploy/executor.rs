@@ -3,8 +3,9 @@ use std::time::{Duration, Instant};
 
 use bollard::Docker;
 use bollard::models::{
-    ContainerCreateBody, HealthConfig, HealthStatusEnum, HostConfig, HostConfigLogConfig, Mount,
-    MountType, PortBinding as DockerPortBinding, RestartPolicy, RestartPolicyNameEnum,
+    ContainerCreateBody, EndpointSettings, HealthConfig, HealthStatusEnum, HostConfig,
+    HostConfigLogConfig, Mount, MountType, NetworkConnectRequest, NetworkCreateRequest,
+    NetworkingConfig, PortBinding as DockerPortBinding, RestartPolicy, RestartPolicyNameEnum,
 };
 use bollard::query_parameters::{
     CreateContainerOptionsBuilder, CreateImageOptionsBuilder, LogsOptionsBuilder,
@@ -17,6 +18,8 @@ use crate::deploy::job::{ContainerSpec, DeploymentJob};
 
 const NANOS_PER_SEC: i64 = 1_000_000_000;
 const HEALTH_POLL_INTERVAL: Duration = Duration::from_secs(1);
+
+pub const MANAGED_LABEL: &str = "horizon.managed";
 
 const FAILURE_LOG_TAIL: &str = "20";
 const FAILURE_LOG_MAX_CHARS: usize = 360;
@@ -71,7 +74,16 @@ pub async fn deploy(docker: &Docker, job: &DeploymentJob, timeouts: Timeouts) ->
         tracing::warn!("pull failed, using local image {}: {err}", job.image);
     }
 
-    // 1. create container
+    // 1. ensure networks
+    for network in &job.networks {
+        if let Err(err) =
+            ensure_network(docker, &network.name, &network.driver, &network.options).await
+        {
+            return failed(format!("network {} failed: {err}", network.name));
+        }
+    }
+
+    // 2. create container
     let create_options = CreateContainerOptionsBuilder::new()
         .name(&job.container_name)
         .build();
@@ -83,7 +95,18 @@ pub async fn deploy(docker: &Docker, job: &DeploymentJob, timeouts: Timeouts) ->
         Err(err) => return failed(format!("create failed: {err}")),
     };
 
-    // 2. stop old container
+    // 3. connect network
+    for network in job.networks.iter().skip(1) {
+        if let Err(err) =
+            connect_network(docker, &new_id, &network.name, network.aliases.clone()).await
+        {
+            let reason = format!("network {} connect failed: {err}", network.name);
+            rollback(docker, &new_id, &[]).await;
+            return failed(reason);
+        }
+    }
+
+    // 4. stop old container
     let stop_options = StopContainerOptionsBuilder::new()
         .t(timeouts.stop_secs)
         .build();
@@ -93,21 +116,21 @@ pub async fn deploy(docker: &Docker, job: &DeploymentJob, timeouts: Timeouts) ->
         }
     }
 
-    // 3. start new
+    // 5. start new
     if let Err(err) = docker.start_container(&new_id, None).await {
         let reason = with_logs(docker, &new_id, format!("start failed: {err}")).await;
         rollback(docker, &new_id, &job.previous_docker_ids).await;
         return failed(reason);
     }
 
-    // 4. healthcheck
+    // 6. healthcheck
     if let Err(error_message) = await_healthy(docker, &new_id, timeouts).await {
         let reason = with_logs(docker, &new_id, error_message).await;
         rollback(docker, &new_id, &job.previous_docker_ids).await;
         return failed(reason);
     }
 
-    // 5. success
+    // 7. success
     let mut removed = Vec::new();
     for old in &job.previous_docker_ids {
         match remove(docker, old).await {
@@ -119,6 +142,63 @@ pub async fn deploy(docker: &Docker, job: &DeploymentJob, timeouts: Timeouts) ->
     Outcome::Succeeded {
         docker_id: new_id,
         removed,
+    }
+}
+
+pub async fn ensure_network(
+    docker: &Docker,
+    name: &str,
+    driver: &str,
+    options: &HashMap<String, String>,
+) -> Result<(), String> {
+    if docker.inspect_network(name, None).await.is_ok() {
+        return Ok(());
+    }
+
+    match docker
+        .create_network(NetworkCreateRequest {
+            name: name.to_string(),
+            driver: Some(driver.to_string()),
+            options: Some(options.clone()),
+            labels: Some(HashMap::from([(
+                MANAGED_LABEL.to_string(),
+                "true".to_string(),
+            )])),
+            ..Default::default()
+        })
+        .await
+    {
+        Ok(_) => Ok(()),
+        Err(err) if docker.inspect_network(name, None).await.is_ok() => {
+            tracing::debug!("network {name} already created: {err}");
+            Ok(())
+        }
+        Err(err) => Err(err.to_string()),
+    }
+}
+
+pub async fn connect_network(
+    docker: &Docker,
+    container_id: &str,
+    name: &str,
+    aliases: Vec<String>,
+) -> Result<(), String> {
+    docker
+        .connect_network(
+            name,
+            NetworkConnectRequest {
+                container: container_id.to_string(),
+                endpoint_config: Some(endpoint_settings(aliases)),
+            },
+        )
+        .await
+        .map_err(|err| err.to_string())
+}
+
+fn endpoint_settings(aliases: Vec<String>) -> EndpointSettings {
+    EndpointSettings {
+        aliases: Some(aliases),
+        ..Default::default()
     }
 }
 
@@ -262,6 +342,12 @@ fn build_config(job: &DeploymentJob) -> ContainerCreateBody {
         }),
         labels: Some(labels),
         host_config: Some(build_host_config(job, spec)),
+        networking_config: job.networks.first().map(|network| NetworkingConfig {
+            endpoints_config: Some(HashMap::from([(
+                network.name.clone(),
+                endpoint_settings(network.aliases.clone()),
+            )])),
+        }),
         ..Default::default()
     }
 }
@@ -280,7 +366,11 @@ fn build_host_config(job: &DeploymentJob, spec: &ContainerSpec) -> HostConfig {
             name: Some(restart_policy_name(&rp.name)),
             maximum_retry_count: Some(rp.max_retry),
         }),
-        network_mode: spec.network.as_ref().and_then(|n| n.mode.clone()),
+        network_mode: if job.networks.is_empty() {
+            spec.network_mode.clone()
+        } else {
+            None
+        },
         log_config: spec.log.as_ref().map(|log| HostConfigLogConfig {
             typ: Some(log.driver.clone()),
             config: Some(log.options.clone()),

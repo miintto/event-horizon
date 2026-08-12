@@ -6,7 +6,7 @@ use serde::Serialize;
 use uuid::Uuid;
 
 use crate::config::Config;
-use crate::deploy::job::DeploymentJob;
+use crate::deploy::job::{DeploymentJob, NetworkDesiredState, NetworkSyncResult};
 
 #[derive(Serialize)]
 struct ClaimRequest {
@@ -22,6 +22,12 @@ struct ResultRequest<'a> {
     removed_docker_ids: &'a [String],
     #[serde(skip_serializing_if = "Option::is_none")]
     error_message: Option<&'a str>,
+}
+
+#[derive(Serialize)]
+struct NetworkSyncRequest<'a> {
+    agent_uuid: Uuid,
+    results: &'a [NetworkSyncResult],
 }
 
 pub struct Control {
@@ -96,6 +102,29 @@ impl Control {
             anyhow::bail!("report failed ({status_code}): {body}");
         }
         Ok(())
+    }
+
+    pub async fn sync_networks(
+        &self,
+        results: &[NetworkSyncResult],
+    ) -> Result<NetworkDesiredState> {
+        let url = format!("{}/api/agents/networks/sync", self.base_url);
+        let payload = NetworkSyncRequest {
+            agent_uuid: self.agent_uuid,
+            results,
+        };
+
+        let response = self.post(&url, &payload).await?;
+        let status = response.status();
+        if !status.is_success() {
+            let body = response.text().await.unwrap_or_default();
+            anyhow::bail!("network sync failed ({status}): {body}");
+        }
+
+        response
+            .json::<NetworkDesiredState>()
+            .await
+            .context("Failed to decode network desired state")
     }
 
     async fn post<T: Serialize>(&self, url: &str, payload: &T) -> Result<reqwest::Response> {

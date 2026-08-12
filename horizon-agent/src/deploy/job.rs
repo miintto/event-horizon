@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct EnvVar {
@@ -50,9 +50,18 @@ pub struct HealthcheckSpec {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct NetworkSpec {
+pub struct NetworkAttachment {
+    pub name: String,
+    #[serde(default = "default_network_driver")]
+    pub driver: String,
     #[serde(default)]
-    pub mode: Option<String>,
+    pub options: HashMap<String, String>,
+    #[serde(default)]
+    pub aliases: Vec<String>,
+}
+
+fn default_network_driver() -> String {
+    "bridge".to_string()
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -81,7 +90,7 @@ pub struct ContainerSpec {
     #[serde(default)]
     pub labels: HashMap<String, String>,
     #[serde(default)]
-    pub network: Option<NetworkSpec>,
+    pub network_mode: Option<String>,
     #[serde(default)]
     pub log: Option<LogSpec>,
 }
@@ -100,5 +109,38 @@ pub struct DeploymentJob {
     #[serde(default)]
     pub labels: HashMap<String, String>,
     #[serde(default)]
+    pub networks: Vec<NetworkAttachment>,
+    #[serde(default)]
     pub previous_docker_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct NetworkMember {
+    pub workload_id: i64,
+    pub alias: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct NetworkDesired {
+    pub name: String,
+    #[serde(default = "default_network_driver")]
+    pub driver: String,
+    #[serde(default)]
+    pub options: HashMap<String, String>,
+    #[serde(default)]
+    pub members: Vec<NetworkMember>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct NetworkDesiredState {
+    #[serde(default)]
+    pub networks: Vec<NetworkDesired>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct NetworkSyncResult {
+    pub network_name: String,
+    pub status: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error_message: Option<String>,
 }

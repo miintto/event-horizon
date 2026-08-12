@@ -12,6 +12,8 @@ use crate::collect::shipper::{SendOutcome, Shipper};
 use crate::config::Config;
 use crate::deploy::control::Control;
 use crate::deploy::executor::{self, Outcome, Timeouts};
+use crate::deploy::job::DeploymentJob;
+use crate::deploy::network;
 
 #[allow(clippy::too_many_arguments)]
 pub async fn run(
@@ -53,7 +55,7 @@ pub async fn run(
             _ = deploy_tick.tick(), if deploy.is_some() => {
                 if deploy_task.as_ref().is_none_or(|task| task.is_finished()) {
                     let (control, docker) = deploy.clone().expect("guarded by deploy.is_some()");
-                    deploy_task = Some(tokio::spawn(deploy_once(control, docker, timeouts)));
+                    deploy_task = Some(tokio::spawn(sync_once(control, docker, timeouts)));
                 }
             }
             _ = &mut shutdown => {
@@ -66,22 +68,33 @@ pub async fn run(
     tracing::info!("agent stopped");
 }
 
-async fn deploy_once(control: Arc<Control>, docker: Docker, timeouts: Timeouts) {
-    let job = match control.claim().await {
-        Ok(Some(job)) => job,
-        Ok(None) => return,
+async fn sync_once(control: Arc<Control>, docker: Docker, timeouts: Timeouts) {
+    match control.claim().await {
+        Ok(Some(job)) => {
+            deploy_and_report(&control, &docker, job, timeouts).await;
+            return;
+        }
+        Ok(None) => {}
         Err(err) => {
             tracing::warn!("deployment claim failed: {err}");
             return;
         }
-    };
+    }
+    network::reconcile(&control, &docker).await;
+}
 
+async fn deploy_and_report(
+    control: &Control,
+    docker: &Docker,
+    job: DeploymentJob,
+    timeouts: Timeouts,
+) {
     tracing::info!(
         "deploying {} (deployment {})",
         job.container_name,
         job.deployment_id
     );
-    let outcome = executor::deploy(&docker, &job, timeouts).await;
+    let outcome = executor::deploy(docker, &job, timeouts).await;
 
     let (docker_id, removed, error_message) = match &outcome {
         Outcome::Succeeded { docker_id, removed } => {
