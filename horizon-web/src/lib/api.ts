@@ -8,10 +8,16 @@ import type {
   Host,
   HostMetricSeries,
   MetricKind,
+  Network,
+  NetworkHostStateListResponse,
+  NetworkListResponse,
   RevisionDefinitionInput,
   Secret,
   SecretListResponse,
   TokenResponse,
+  User,
+  UserListResponse,
+  UserRole,
   Workload,
   WorkloadRevision,
 } from "@/lib/types";
@@ -284,6 +290,95 @@ export function updateSecret(secretId: number, value: string): Promise<Secret> {
 
 export function deleteSecret(secretId: number): Promise<void> {
   return apiDelete(`/api/secrets/${secretId}`);
+}
+
+export function getNetworks(params?: {
+  page?: number;
+  size?: number;
+}): Promise<NetworkListResponse> {
+  const search = new URLSearchParams();
+  if (params?.page != null) {
+    search.set("page", String(params.page));
+  }
+  if (params?.size != null) {
+    search.set("size", String(params.size));
+  }
+  const qs = search.toString();
+  return apiGet<NetworkListResponse>(`/api/networks${qs ? `?${qs}` : ""}`);
+}
+
+export function createNetwork(body: {
+  name: string;
+  driver: string;
+  options?: Record<string, string>;
+}): Promise<Network> {
+  return apiPost<Network>("/api/networks", body);
+}
+
+export function deleteNetwork(networkId: number): Promise<void> {
+  return apiDelete(`/api/networks/${networkId}`);
+}
+
+export function getNetworkWorkloads(networkId: number): Promise<Workload[]> {
+  return apiGet<Workload[]>(`/api/networks/${networkId}/workloads`);
+}
+
+/** alias 를 비우면 서버가 workload.name 으로 채운다 */
+export function attachWorkload(
+  networkId: number,
+  body: { workload_id: number; alias?: string },
+): Promise<void> {
+  return apiPost<void>(`/api/networks/${networkId}/workloads`, body);
+}
+
+export function detachWorkload(
+  networkId: number,
+  workloadId: number,
+): Promise<void> {
+  return apiDelete(`/api/networks/${networkId}/workloads/${workloadId}`);
+}
+
+export function getNetworkState(
+  networkId: number,
+): Promise<NetworkHostStateListResponse> {
+  return apiGet<NetworkHostStateListResponse>(
+    `/api/networks/${networkId}/state`,
+  );
+}
+
+export function getMe(): Promise<User> {
+  return apiGet<User>("/api/me");
+}
+
+export function getUsers(params?: {
+  page?: number;
+  size?: number;
+}): Promise<UserListResponse> {
+  const search = new URLSearchParams();
+  if (params?.page != null) {
+    search.set("page", String(params.page));
+  }
+  if (params?.size != null) {
+    search.set("size", String(params.size));
+  }
+  const qs = search.toString();
+  return apiGet<UserListResponse>(`/api/users${qs ? `?${qs}` : ""}`);
+}
+
+export async function createUser(input: {
+  name?: string;
+  email: string;
+  password: string;
+  passwordCheck: string;
+  role: UserRole;
+}): Promise<void> {
+  await apiPost<TokenResponse>("/api/auth/register", {
+    name: input.name,
+    email: input.email,
+    password: input.password,
+    password_check: input.passwordCheck,
+    role: input.role,
+  });
 }
 
 export interface ContainerMetricQuery {

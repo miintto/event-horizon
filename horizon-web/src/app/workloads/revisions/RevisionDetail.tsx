@@ -117,13 +117,10 @@ export function RevisionDetail({ revision }: { revision: WorkloadRevision }) {
           )}
         </Section>
 
-        <Section label="Network" count={spec.network ? 1 : 0}>
-          {spec.network && (
+        <Section label="Network" count={spec.network_mode ? 1 : 0}>
+          {spec.network_mode && (
             <Row>
-              <Mono>{spec.network.mode ?? "default"}</Mono>
-              {spec.network.names.length > 0 && (
-                <Note>{spec.network.names.join(", ")}</Note>
-              )}
+              <Mono>{spec.network_mode}</Mono>
             </Row>
           )}
         </Section>

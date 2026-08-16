@@ -48,6 +48,56 @@ export function NewButton({
   );
 }
 
+export function Pagination({
+  page,
+  hasPrev,
+  hasNext,
+  busy = false,
+  onPrev,
+  onNext,
+}: {
+  page: number;
+  hasPrev: boolean;
+  hasNext: boolean;
+  busy?: boolean;
+  onPrev: () => void;
+  onNext: () => void;
+}) {
+  if (!hasPrev && !hasNext) return null;
+  return (
+    <nav className="mt-4 flex items-center justify-between gap-3">
+      <PageButton disabled={!hasPrev || busy} onClick={onPrev}>
+        Prev
+      </PageButton>
+      <span className="text-xs text-neutral-500">{page} Page</span>
+      <PageButton disabled={!hasNext || busy} onClick={onNext}>
+        Next
+      </PageButton>
+    </nav>
+  );
+}
+
+function PageButton({
+  disabled,
+  onClick,
+  children,
+}: {
+  disabled: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className="cursor-pointer rounded-md border border-neutral-800 px-3 py-1.5 text-sm font-medium text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-neutral-400"
+    >
+      {children}
+    </button>
+  );
+}
+
 export function ErrorBox({ children }: { children: React.ReactNode }) {
   return (
     <div className="rounded-md border border-red-900/50 bg-red-950/40 p-4 text-sm text-red-300">

@@ -4,6 +4,26 @@ export interface TokenResponse {
   expires_in: number;
 }
 
+export type UserRole = "admin" | "member";
+
+/** 비밀번호 해시는 어떤 응답에도 실리지 않는다 */
+export interface User {
+  id: number;
+  name?: string;
+  email: string;
+  role: UserRole;
+  is_active: boolean;
+  created_at?: string;
+}
+
+export interface UserListResponse {
+  users: User[];
+}
+
+export const USER_NAME_MAX = 100;
+export const USER_PASSWORD_MIN = 8;
+export const USER_PASSWORD_MAX = 32;
+
 export type HostStatus = "online" | "offline";
 
 export interface Host {
@@ -117,10 +137,46 @@ export interface Healthcheck {
   retries?: number;
 }
 
+/** 네트워크 소속은 revision 이 아니라 workload_network 가 들고 있다 */
 export interface Network {
-  mode?: string;
-  names: string[];
+  id: number;
+  name: string;
+  driver: string;
+  options: Record<string, string>;
+  created_at?: string;
 }
+
+export interface NetworkListResponse {
+  networks: Network[];
+}
+
+export type NetworkSyncStatus = "SYNCED" | "FAILED";
+
+/**
+ * 에이전트가 리컨실 후 보고한 호스트별 마지막 상태. 진행 상황이 아니라 현재 상태다.
+ * 실패는 다음 주기에 자동으로 재시도된다.
+ */
+export interface NetworkHostState {
+  id: number;
+  network_id: number;
+  host_id: number;
+  status: NetworkSyncStatus;
+  error_message?: string;
+  synced_at?: string;
+}
+
+export interface NetworkHostStateListResponse {
+  states: NetworkHostState[];
+}
+
+export const NETWORK_NAME_MAX = 255;
+
+/**
+ * 화면은 bridge 만 만든다. overlay 는 swarm 을 요구해 범위 밖이고,
+ * macvlan 계열은 드라이버 `options` 가 있어야 하는데 폼이 그걸 보내지 않는다.
+ * 서버는 여전히 임의 문자열을 받으므로 API 로는 다른 드라이버도 등록할 수 있다.
+ */
+export const NETWORK_DRIVER = "bridge";
 
 export interface LogConfig {
   driver: string;
@@ -141,7 +197,7 @@ export interface ContainerSpec {
   restart_policy?: RestartPolicy;
   healthcheck?: Healthcheck;
   labels?: Record<string, string>;
-  network?: Network;
+  network_mode?: string;
   log?: LogConfig;
 }
 

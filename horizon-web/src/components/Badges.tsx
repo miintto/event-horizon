@@ -1,4 +1,9 @@
-import type { Container, DeploymentStatus, Host } from "@/lib/types";
+import type {
+  Container,
+  DeploymentStatus,
+  Host,
+  NetworkSyncStatus,
+} from "@/lib/types";
 
 function Dot({ on }: { on: boolean }) {
   return (
@@ -33,7 +38,6 @@ export function WorkloadBadge({ running }: { running: number }) {
   return <Badge on={running > 0}>{running > 0 ? "running" : "stopped"}</Badge>;
 }
 
-/** 배포는 4개 상태라 on/off 2색인 Badge 로 표현되지 않는다 */
 const DEPLOYMENT_COLORS: Record<DeploymentStatus, string> = {
   succeeded: "bg-emerald-500 text-emerald-400",
   running: "bg-amber-500 text-amber-400",
@@ -47,6 +51,22 @@ export function DeploymentBadge({ status }: { status: DeploymentStatus }) {
     <span className="inline-flex shrink-0 items-center gap-1.5 text-xs font-medium">
       <span className={`inline-block h-2 w-2 rounded-full ${dot}`} />
       <span className={text}>{status}</span>
+    </span>
+  );
+}
+
+export function SyncBadge({ status }: { status: NetworkSyncStatus }) {
+  const synced = status === "SYNCED";
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1.5 text-xs font-medium">
+      <span
+        className={`inline-block h-2 w-2 rounded-full ${
+          synced ? "bg-emerald-500" : "bg-red-500"
+        }`}
+      />
+      <span className={synced ? "text-emerald-400" : "text-red-400"}>
+        {synced ? "synced" : "failed"}
+      </span>
     </span>
   );
 }

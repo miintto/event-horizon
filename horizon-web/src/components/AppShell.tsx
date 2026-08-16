@@ -10,11 +10,15 @@ import {
   HostIcon,
   LogoutIcon,
   MenuIcon,
+  NetworkIcon,
   OverviewIcon,
   SecretIcon,
+  UserIcon,
   WorkloadIcon,
 } from "@/components/Icons";
+import { getMe } from "@/lib/api";
 import { LOGIN_PATH, redirectToLogin } from "@/lib/auth";
+import type { User } from "@/lib/types";
 
 interface NavItem {
   href: string;
@@ -26,14 +30,35 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Overview", Icon: OverviewIcon },
   { href: "/hosts", label: "Hosts", Icon: HostIcon },
   { href: "/workloads", label: "Workloads", Icon: WorkloadIcon },
+  { href: "/networks", label: "Networks", Icon: NetworkIcon },
   { href: "/secrets", label: "Secrets", Icon: SecretIcon },
+  { href: "/users", label: "Users", Icon: UserIcon },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [me, setMe] = useState<User | null>(null);
 
   const bare = pathname === LOGIN_PATH;
+
+  useEffect(() => {
+    if (bare) return;
+    let active = true;
+
+    async function load() {
+      try {
+        const user = await getMe();
+        if (active) setMe(user);
+      } catch {}
+    }
+
+    void load();
+
+    return () => {
+      active = false;
+    };
+  }, [bare]);
 
   useEffect(() => {
     if (!open) return;
@@ -104,7 +129,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="mt-auto px-2 py-3">
+        <div className="mt-auto flex flex-col gap-0.5 px-2 py-3">
+          {me && (
+            <div className="min-w-0 p-3">
+              <p className="truncate text-sm font-medium text-neutral-300">
+                {me.email}
+              </p>
+              {me.name && (
+                <p className="truncate text-sm text-neutral-400">{me.name}</p>
+              )}
+            </div>
+          )}
           <button
             type="button"
             onClick={redirectToLogin}

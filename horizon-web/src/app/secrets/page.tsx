@@ -7,6 +7,7 @@ import {
   NewButton,
   PageHeader,
   PageShell,
+  Pagination,
 } from "@/components/PageShell";
 import {
   createSecret,
@@ -151,44 +152,14 @@ function Secrets() {
         />
       )}
 
-      {(hasPrev || hasNext) && (
-        <nav className="mt-4 flex items-center justify-between gap-3">
-          <PageButton
-            disabled={!hasPrev || loading}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            Prev
-          </PageButton>
-          <span className="text-xs text-neutral-500">{page} Page</span>
-          <PageButton
-            disabled={!hasNext || loading}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Next
-          </PageButton>
-        </nav>
-      )}
+      <Pagination
+        page={page}
+        hasPrev={hasPrev}
+        hasNext={hasNext}
+        busy={loading}
+        onPrev={() => setPage((p) => p - 1)}
+        onNext={() => setPage((p) => p + 1)}
+      />
     </PageShell>
-  );
-}
-
-function PageButton({
-  disabled,
-  onClick,
-  children,
-}: {
-  disabled: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      className="cursor-pointer rounded-md border border-neutral-800 px-3 py-1.5 text-sm font-medium text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-neutral-400"
-    >
-      {children}
-    </button>
   );
 }
