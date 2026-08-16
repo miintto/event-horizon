@@ -44,26 +44,19 @@ export function SecretForm({
       onSubmit={handleSubmit}
       className="mb-4 flex flex-col gap-3 rounded-lg border border-neutral-800 bg-neutral-900 p-4"
     >
-      <Field
-        label="Name"
-        hint={
-          editing
-            ? "Name cannot be changed"
-            : "Matches the ref used in a revision"
-        }
-      >
+      <Field label="Name">
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
           disabled={editing}
           maxLength={SECRET_NAME_MAX}
-          placeholder="postgres/password"
+          placeholder="/enter/your/secret/name"
           className={`${INPUT} font-mono disabled:text-neutral-500`}
         />
       </Field>
 
-      <Field label="Value" hint="Cannot be viewed again after saving">
+      <Field label="Value">
         <textarea
           value={value}
           onChange={(e) => setValue(e.target.value)}
@@ -71,6 +64,7 @@ export function SecretForm({
           rows={3}
           spellCheck={false}
           maxLength={SECRET_VALUE_MAX}
+          placeholder="Cannot be viewed again after saving"
           className={`${INPUT} resize-y font-mono text-xs ${
             reveal ? "" : "[-webkit-text-security:disc]"
           }`}
@@ -99,7 +93,7 @@ export function SecretForm({
 }
 
 const INPUT =
-  "w-full rounded-md border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-neutral-100 outline-none focus:border-neutral-500";
+  "w-full rounded-md border placeholder-neutral-600 border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-neutral-100 outline-none focus:border-neutral-500";
 
 function Field({
   label,
